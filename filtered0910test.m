@@ -14,8 +14,10 @@ dirm = cd;
 cd(home);
 
 %% Generating FRM database
+% cd(above);
 % dir = 'DBFRM';
 % mkdir(dir);
+% cd(dir);dir = cd;
 % % Parameters for generateDatabaseLsas indicates environment conditions,
 % % ranges, and target rotations to be modeled
 % ranges = 9.5:0.5:10.5;
@@ -31,8 +33,9 @@ cd(home);
 % envs(:,3) = 3.8*ones(length(c_w),1);
 % % which of the 7 .ffn's to model
 % objs = [4,10,3,1]; chirp = [1 30];
-% cd(dirm);
+% cd(home);
 % dirMapDBFRM = generateDatabaseLsas(dir,envs,ranges,rots,objs,chirp);
+% cd(dirm);
 % save('dirMapDBFRM.mat','dirMapDBFRM');
 
 cd(dirm);
@@ -40,15 +43,15 @@ load('dirMapDBFRM.mat');
 cd(home);
 
 %% FORMING OBSERVATION MATRIX OF all usable parts of the Filtered Runs
-realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
-    'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
-[Y, t_Y, Dclutter] = realACfetch0910(realTarg);
-
-%Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
-cd(dirm);
-save('Y.mat','Y');
-save('t_Y.mat','t_Y');
-save('Dclutter.mat','Dclutter');
+% realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
+%     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
+% [Y, t_Y, Dclutter] = realACfetch0910(realTarg);
+% 
+% %Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
+% cd(dirm);
+% save('Y.mat','Y');
+% save('t_Y.mat','t_Y');
+% save('Dclutter.mat','Dclutter');
 cd(dirm);
 load('Y.mat');
 load('t_Y.mat');
@@ -56,7 +59,7 @@ load('Dclutter.mat');
 cd(home);
 
 %% Opening and Partitioning Rock Data
-Shuffling Clutter Aspects
+% Shuffling Clutter Aspects
 Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
 
 % Splitting Clutter samples
