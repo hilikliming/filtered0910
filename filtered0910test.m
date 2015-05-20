@@ -20,9 +20,9 @@ cd(home);
 % cd(dir);dir = cd;
 % % Parameters for generateDatabaseLsas indicates environment conditions,
 % % ranges, and target rotations to be modeled
-% ranges = 9.5:0.5:10.5;
+% ranges = 10;%9.5:0.5:10.5;
 % %water and sediment sound speeds
-% c_w = [1448,1456];
+% c_w = [1464,1530];
 % c_s = [1694,1694];
 % % rotations to model
 % rots = 0:20:360;
@@ -59,16 +59,17 @@ load('Dclutter.mat');
 cd(home);
 
 %% Opening and Partitioning Rock Data
-% Shuffling Clutter Aspects
-Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
 
-% Splitting Clutter samples
-DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
-DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
-
-cd(dirm);
-save('DcTrain.mat','DcTrain');
-save('DcTest.mat','DcTest');
+% % Shuffling Clutter Aspects
+% Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
+% 
+% % Splitting Clutter samples
+% DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
+% DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
+% 
+% cd(dirm);
+% save('DcTrain.mat','DcTrain');
+% save('DcTest.mat','DcTest');
 
 cd(dirm);
 load('DcTrain.mat');
@@ -77,10 +78,10 @@ load('DcTest.mat');
 cd(home);
 Y = [Y DcTest];
 t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
-[N, K] = size(Y);
+
 
 %% Extracting and Sampling Training Templates
-Ytrain=getTrainingSamples(dirMapDBFRM);
+Ytrain=getTrainingSamples(dirMapDBFRM(:,:,:,:));
 Ytrain(5).D=DcTrain;
  
 % Sub-sampling and organizing our training data to two classes for training
@@ -88,14 +89,14 @@ Ytrain(5).D=DcTrain;
 R_m = struct([]);
 mu_m = struct([]);
 YtrainSub = struct([]);
-pickDs =[1;2;3;4;5];
+ pickDs =[1,2;3,4];
 
 for m = 1:size(pickDs,1)
     DD=[];
     for c = pickDs(m,:)
         if(c>0)
             if(c~=5)
-                pick = randsample(size(Ytrain(c).D,2),floor(1/5*size(Ytrain(c).D,2)));
+                pick = randsample(size(Ytrain(c).D,2),floor(1/6*size(Ytrain(c).D,2)));
             else
                 pick =1:size(Ytrain(c).D,2);
             end
@@ -145,16 +146,19 @@ D_KSVD = struct([]);
 DD = [];
 Data=[];
 
-ms= [350,350,350,350,150]; % number of atoms to train for each class
+ms= [320,320,320,320,15]; % number of atoms to train for each class
 
 coding.tau = 15;
 % Creating SVD and KSVD dictionaries and accumulating KSVD atoms for 
 % LP-KSVD joint solution
 
-sdsz=10;
+sdsz=1
 for m = 1:size(pickDs,1)
     D = YtrainSub(m).D; 
-    P = Y(:,t_Y==m);
+    P = [];
+    for c = pickDs(m,:)
+        P = [ P Y(:,t_Y==c)];
+    end
     els = randsample(size(P,2),sdsz);
     D = [D,P(:,els)];
     
@@ -199,6 +203,14 @@ load('D_KSVD.mat'); %D_KSVD=D_KSVD.D_KSVD;
 load('R_m.mat','R_m');
 load('mu_m.mat','mu_m');
 cd(home);
+
+%% removing rocks
+Y = Y(:,t_Y~=5);
+t_Y=t_Y(t_Y~=5);
+
+[N, K] = size(Y);
+
+
 %% NOT Using Prewhitening
 for m = 1:size(pickDs,1)
     R_m(m).R=eye(N);
@@ -207,15 +219,15 @@ end
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [75 80 230 100 30]%[100 100 100 100 0]%[95 125 0 90 29]%[7,9,17,15,4]%
-mKSVD   =   [120 225 350 349 22]%[250 250 350 250 0]%[231 235 0 297 28] %[0 10 0 10 0] -> ~75%
+mSVD    =   [40 40 40 40 0]%[75 80 230 100 0]%[95 125 0 90 29]%[7,9,17,15,4]%
+mKSVD   =   [220 220 220 220 0]%[120 225 350 349 0]%[231 235 0 297 28] %[0 10 0 10 0] -> ~75%
 %mLP     =   [350 350 300 350 15]%[10,10];%[8 7 8 10 0];
 
 % To account for discrepancy in lower frequencies of model
-  h_bias = [];%zeros(301,1); 
-   %h_bias(1:10)=1; 
-   %h_bias(11)=1.3; 
-   %h_bias=h_bias/norm(h_bias);
+h_bias = [];%zeros(301,1); 
+%h_bias(1:10)=1; 
+%h_bias(11)=1.3; 
+%h_bias=h_bias/norm(h_bias);
  
 % Trimming down and adding bias vector
 for m = 1:size(pickDs,1)
@@ -229,8 +241,8 @@ end
 
 %% Running the WMSC
 est = 'MSD'
-sigA = 3
-tauK=7;%min(mKSVD(mKSVD>0));
+sigA =1
+tauK=5%min(mKSVD(mKSVD>0));
 %tauLP =1;
 %d_Yplain = WMSC(Y,D_plain,mu_m,R_m,est,sigA);
 d_YSVD = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
@@ -248,13 +260,13 @@ d_YKSVD = OMPWMSC(Y,D_KSVD,mu_m,R_m,est,sigA,tauK);%WMSC(Y,D_KSVD,mu_m,R_m,est,s
 figure;
 plot(d_YSVD);
 title('SVD');
-legend('J_1','J_2','J_3','J_4','J_C');%legend('J_1','J_2','J_3','J_4');% %legend('J_T','J_{NT}');%
+legend('J_1','J_2','J_3','J_4');%legend('J_1','J_2','J_3','J_4','J_C');% %legend('J_T','J_{NT}');%
 axis([0,size(Y,2),min(min(d_YSVD)),max(max(d_YSVD))]);
 
 figure;
 plot(d_YKSVD);
 title('KSVD');
-legend('J_1','J_2','J_3','J_4','J_C');%legend('J_1','J_2','J_3','J_4');%legend('J_T','J_{NT}');%
+legend('J_1','J_2','J_3','J_4');%legend('J_1','J_2','J_3','J_4','J_C');%legend('J_T','J_{NT}');%
 axis([0,size(Y,2),min(min(d_YKSVD)),max(max(d_YKSVD))]);
 
 % figure;
@@ -265,16 +277,15 @@ axis([0,size(Y,2),min(min(d_YKSVD)),max(max(d_YKSVD))]);
 
 %% Documenting Result/Performance for Analysis
 
-%%Formatting the original truth table to match their correct hypotheses
-origT = t_Y;
-%origT(origT==6)= 5; %Rocks are class five
 
+%% CONVERTING TRUTH TABLE TO BINARY DECISIONS
 % UXO vs. non-UXO (last 4 are cylinder, pipe, rocks)
 % First 2 are aluxo, ssuxo
+origT = t_Y;
 t_Y(t_Y==1|t_Y==2)= 1;
 t_Y(t_Y~=1)= 0;
 
-% Initializing min discriminant value vector for K observations and a
+%% Initializing min discriminant value vector for K observations and a
 % decision vector m_P
 
 
@@ -297,8 +308,8 @@ m_YKSVD = zeros(K,1);
 
 
 % Determine Minimal Discriminant Value to make decision and record decision
-T = [1,2];%[1,2];%[1,2];
-NT = [3,4,5];%[3,4];%[3,4,5];
+T = [1];%[1,2];%[1,2];
+NT = [2];%[3,4];%[3,4,5];
 
 % Finding minimal value from UXO and non UXO families of classes
 for k = 1:K

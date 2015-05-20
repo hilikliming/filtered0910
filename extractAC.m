@@ -15,7 +15,7 @@ len = size(run,2);
 %% Begin Unpacking and setting up smaller data structures for decimated form
 AC = abs(fft(run,[],2))';
 aAC = zeros(size(AC,1),aper);
-
+AC = AC(:,sum(abs(AC),1)>1);
 % Decimate along aspect
 for i = 1:size(AC,1)
 aAC(i,:) = resample(AC(i,:),aper,size(AC,2));

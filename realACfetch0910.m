@@ -2,7 +2,7 @@ function [ Y, t_Y, Dclutter ] = realACfetch0910( realTarg )
 home = cd;
 targetID = 1;
 Y = []; t_Y = [];
-upperF = 30.2e3;
+upperF = 30e3;
 f_s = 100e3;
 
 eps = 30; %Experimentally determined threholding value for grabbing important aspects
@@ -17,7 +17,7 @@ for tag = realTarg
         if(strfind(char(x(run)),'norm'))
             ob=open(char(x(run)));
             cd(home);
-            TS = extractAC(ob.new_data,eps,301,upperF,f_s,187);
+            TS = extractAC(ob.new_data,eps,301,upperF,f_s,186);
             if(strfind(char(x(run)),'ROCK'))
                 Dclutter = [Dclutter,TS];
             else
