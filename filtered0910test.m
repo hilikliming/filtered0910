@@ -14,33 +14,33 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-% !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
-% hard-coded, change them to your local directories!
-cd(above);
-dirFRM  = 'DBFRM';
-mkdir(dirFRM);
-cd(dirFRM);dirFRM = cd;
-% Parameters for generateDatabaseLsas indicates environment conditions,
-% ranges, and target rotations to be modeled
-ranges = 10;%9.5:0.5:10.5;
-%water and sediment sound speeds
-c_w = [1464,1530];
-c_s = [1694,1694];
-% rotations to model
-rots = 0:20:360;
-% environment parameters to model, water, sediment speed, interface elevation
-envs      = zeros(length(c_w),3);
-envs(:,1) = c_w;
-envs(:,2) = c_s;
-envs(:,3) = 3.8*ones(length(c_w),1);
-% which of the 7 .ffn's to model
-objs    = [4,10,3,1]; 
-chirp   = [1 30]; % start and end freq of chirp defines center and BW
-runlen  = 21;
-cd(home);
-dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
-cd(dirm);
-save('dirMapDBFRM.mat','dirMapDBFRM');
+% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% % hard-coded, change them to your local directories!
+% cd(above);
+% dirFRM  = 'DBFRM';
+% mkdir(dirFRM);
+% cd(dirFRM);dirFRM = cd;
+% % Parameters for generateDatabaseLsas indicates environment conditions,
+% % ranges, and target rotations to be modeled
+% ranges = 10;%9.5:0.5:10.5;
+% %water and sediment sound speeds
+% c_w = [1464,1530];
+% c_s = [1694,1694];
+% % rotations to model
+% rots = 0:20:360;
+% % environment parameters to model, water, sediment speed, interface elevation
+% envs      = zeros(length(c_w),3);
+% envs(:,1) = c_w;
+% envs(:,2) = c_s;
+% envs(:,3) = 3.8*ones(length(c_w),1);
+% % which of the 7 .ffn's to model
+% objs    = [4,10,3,1]; 
+% chirp   = [1 30]; % start and end freq of chirp defines center and BW
+% runlen  = 21;
+% cd(home);
+% dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
+% cd(dirm);
+% save('dirMapDBFRM.mat','dirMapDBFRM');
 
 cd(dirm);
 load('dirMapDBFRM.mat');
@@ -97,14 +97,14 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 % YtrainSub = struct([]);
 % R_m     = struct([]);
 % mu_m    = struct([]);
- pickDs  = [1,2;3,4];
+pickDs  = [1,2;3,4];
 % 
 % for m = 1:size(pickDs,1)
 %     DD =[];
 %     for c = pickDs(m,:)
 %         if(c>0)
 %             if(c~=5)
-%                 pick = randsample(size(Ytrain(c).D,2),floor(1/6*size(Ytrain(c).D,2)));
+%                 pick = randsample(size(Ytrain(c).D,2),floor(1/3*size(Ytrain(c).D,2)));
 %             else
 %                 pick =1:size(Ytrain(c).D,2);
 %             end
@@ -130,7 +130,7 @@ cd(home);
 
 %% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
 
-% param.numIteration          = 15; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
+% param.numIteration          = 25; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
 % param.preserveDCAtom        = 0;
 % param.InitializationMethod  = 'DataElements';
 % param.displayProgress       = 1;
@@ -144,7 +144,7 @@ cd(home);
 % coding.errorFlag = 1;            
 % coding.errorGoal = 1e-4; % allowed representation error for each signal (only if errorFlag = 1)
 % coding.eta       = 1e-6; % Used in LP-KSVD
-% coding.tau       = 15;   % Used in OMP during Sparse coding phase of KSVD
+% coding.tau       = 10;   % Used in OMP during Sparse coding phase of KSVD
 % coding.L         = coding.tau;
 % 
 % D_SVD  = struct([]);
@@ -186,18 +186,18 @@ cd(home);
 %     [U,S,V]     = svd(D,'econ');
 %     D_SVD(m).D  = U(:,1:301);%R_m(m).R*(U(:,1:ms(m))-mu_m(m).mu*ones(1,ms(m)));
 % end
-
-% % LP-KSVD Training on block matrix of Training samples (i.e. 'Data')
-% param.K= size(DD,2);
-% param.Dict = DD;
 % 
-% DDD = LPKSVD(Data,param,coding);
-% b=1;
-% for m=1:size(pickDs,1)
-% D_LP(m).D = DDD(:,b:b+ms(m)-1);
-% b= ms(m)+b;
-% end
-
+% % % % LP-KSVD Training on block matrix of Training samples (i.e. 'Data')
+% % % param.K= size(DD,2);
+% % % param.Dict = DD;
+% % % 
+% % % DDD = LPKSVD(Data,param,coding);
+% % % b=1;
+% % % for m=1:size(pickDs,1)
+% % % D_LP(m).D = DDD(:,b:b+ms(m)-1);
+% % % b= ms(m)+b;
+% % % end
+% 
 % %% Saving the Learned Signal Subspaces
 % cd(dirm);
 % save('D_SVD.mat','D_SVD');
@@ -229,8 +229,8 @@ end
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [30 30]
-mKSVD   =   [250 250]
+mSVD    =   [190 280]
+mKSVD   =   [190 350]
 %mLP     =   [350 350 300 350 15]
 
 % To account for discrepancy in lower frequencies of model (not currently
@@ -253,7 +253,7 @@ end
 %% Running the WMSC
 est  = 'MSD'
 sigA = 1 % Number of Aspects used per decision
-tauK = 5;
+tauK = 10;
 %tauLP =1;
 
 d_YSVD = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
