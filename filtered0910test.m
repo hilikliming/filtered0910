@@ -14,6 +14,7 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
+
 % cd(above);
 % dirFRM  = 'DBFRM';
 % mkdir(dirFRM);
@@ -44,6 +45,7 @@ load('dirMapDBFRM.mat');
 cd(home);
 
 %% Forming OBSERVATION (Testing) Matrix of all usable parts of the Filtered Runs
+
 % realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
 %     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
 % [Y, t_Y, Dclutter] = realACfetch0910(realTarg); % !!!This script has the
@@ -85,6 +87,7 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 
 
 %% Extracting and Sampling Training Templates
+
 % Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
 % Ytrain(5).D  = DcTrain;
 %  
@@ -124,7 +127,7 @@ load('YtrainSub.mat');
 cd(home);
 
 %% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
-% Adding clutter class to the Training Dictionaries
+
 % param.numIteration          = 15; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
 % param.preserveDCAtom        = 0;
 % param.InitializationMethod  = 'DataElements';
@@ -209,6 +212,7 @@ load('mu_m.mat','mu_m');
 cd(home);
 
 %% removing rocks
+
 Y = Y(:,t_Y~=5);
 t_Y=t_Y(t_Y~=5);
 
@@ -223,9 +227,9 @@ end
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [10 10 40 40 0]%[75 80 230 100 0]%[95 125 0 90 29]%[7,9,17,15,4]%
-mKSVD   =   [15 15 350 350 0]%[120 225 350 349 0]%[231 235 0 297 28] %[0 10 0 10 0] -> ~75%
-%mLP     =   [350 350 300 350 15]%[10,10];%[8 7 8 10 0];
+mSVD    =   [10 10]
+mKSVD   =   [15 15]
+%mLP     =   [350 350 300 350 15]
 
 % To account for discrepancy in lower frequencies of model (not currently
 % in use hence the '[]'
@@ -236,29 +240,29 @@ h_bias = [];%zeros(301,1);
  
 % Trimming down and adding bias vector
 for m = 1:size(pickDs,1)
-    USVD = D_SVD(m).D;
+    USVD  = D_SVD(m).D;
     UKSVD = D_KSVD(m).D;
-    %ULP = D_LP(m).D;
-    D_SVD(m).D = [USVD(:,1:mSVD(m)) h_bias];
+    %ULP   = D_LP(m).D;
+    D_SVD(m).D  = [USVD(:,1:mSVD(m)) h_bias];
     D_KSVD(m).D = [UKSVD(:,1:mKSVD(m)) h_bias];
-    %D_LP(m).D = [ULP h_bias];%[ULP(:,1:mLP(m)) h_bias];
+    %D_LP(m).D   = [ULP h_bias];%[ULP(:,1:mLP(m)) h_bias];
 end
 
 %% Running the WMSC
-est = 'MSD'
-sigA =1
-tauK=5%min(mKSVD(mKSVD>0));
+est  = 'MSD'
+sigA = 1 % Number of Aspects used per decision
+tauK = 5;
 %tauLP =1;
-%d_Yplain = WMSC(Y,D_plain,mu_m,R_m,est,sigA);
+
 d_YSVD = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
 d_YKSVD = OMPWMSC(Y,D_KSVD,mu_m,R_m,est,sigA,tauK);%WMSC(Y,D_KSVD,mu_m,R_m,est,sigA);%
-%d_YLP   = LocalWMSC(Y,D_LP,mu_m,R_m,est,sigA,tauLP,1e-6);%%WMSC(Y,D_LP,mu_m,R_m,est,sigA);
+%d_YLP   = LocalWMSC(Y,D_LP,mu_m,R_m,est,sigA,tauLP,1e-6);%WMSC(Y,D_LP,mu_m,R_m,est,sigA);
 
-%% Displaying Results comparison
+%% Displaying Result/Method Comparison
 figure;
 plot(d_YSVD);
 title('SVD');
-legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4');%legend('J_1','J_2','J_3','J_4','J_C');% %
+legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4');%legend('J_1','J_2','J_3','J_4','J_C');%
 axis([0,size(Y,2),min(min(d_YSVD)),max(max(d_YSVD))]);
 
 figure;
@@ -285,19 +289,19 @@ t_Y(t_Y~=1)= 0;
 % Initializing min discriminant value vector for K observations and a
 % decision vector m_P
 
-jmin_TSVD = zeros(K,1);
+jmin_TSVD  = zeros(K,1);
 jmin_NTSVD = zeros(K,1);
 
-jmin_TKSVD = zeros(K,1);
+jmin_TKSVD  = zeros(K,1);
 jmin_NTKSVD = zeros(K,1);
 
-% jmin_TLP = zeros(K,1);
+% jmin_TLP  = zeros(K,1);
 % jmin_NTLP = zeros(K,1);
 
 
-m_YSVD = zeros(K,1);
+m_YSVD  = zeros(K,1);
 m_YKSVD = zeros(K,1);
-%m_YLP = zeros(K,1);
+%m_YLP   = zeros(K,1);
 
 
 % Determine Minimal Discriminant Value to make decision and record decision
@@ -308,8 +312,10 @@ NT = [2];%[3,4];%[3,4,5];
 for k = 1:K
 % Strict Class decision
 [~, m_YSVD(k)] = min(d_YSVD(k,:));
+% Used in ratio comparison test for binary classifier
 jmin_TSVD(k) = min(d_YSVD(k,T));%/norm(d_YSVD(k,T));
 jmin_NTSVD(k) = min(d_YSVD(k,NT));%/norm(d_YSVD(k,NT));
+
 [~, m_YKSVD(k)] = min(d_YKSVD(k,:));
 jmin_TKSVD(k) = min(d_YKSVD(k,T));%/norm(d_YKSVD(k,T));
 jmin_NTKSVD(k) = min(d_YKSVD(k,NT));%/norm(d_YKSVD(k,NT));
@@ -334,9 +340,9 @@ m_YKSVD(m_YKSVD==t) = 1;
 end
 
 
-m_YSVD(m_YSVD~=1) = 0;
+m_YSVD(m_YSVD~=1)   = 0;
 m_YKSVD(m_YKSVD~=1) = 0;
-%m_YLP(m_YLP~=1) = 0;
+%m_YLP(m_YLP~=1)     = 0;
 
 %% ROC Curve Forming
 gammas  = 0.2:1e-2:2.5;
@@ -355,31 +361,31 @@ gam_i   = 1;
 
 for gamma = gammas
 
-    dSVD = zeros(K,1);
+    dSVD  = zeros(K,1);
     dKSVD = zeros(K,1);
-    %dLP = zeros(K,1);
+    %dLP   = zeros(K,1);
     for k = 1:K
         %If the J_m that lies closest to m subspace is still too great we
         %say it's a target
 
-        dSVD(k) = (jmin_TSVD(k)/jmin_NTSVD(k) < gamma);
+        dSVD(k)  = (jmin_TSVD(k)/jmin_NTSVD(k) < gamma);
         dKSVD(k) = (jmin_TKSVD(k)/jmin_NTKSVD(k) < gamma);
-        %dLP(k) = (jmin_TLP(k)/jmin_NTLP(k) < gamma);
+        %dLP(k)   = (jmin_TLP(k)/jmin_NTLP(k) < gamma);
     end
     
-    dSVD = logical(dSVD);
+    dSVD  = logical(dSVD);
     dKSVD = logical(dKSVD);
-    %dLP = logical(dLP);
+    %dLP   = logical(dLP);
     
     
-    P_dSVD(gam_i) = sum(dSVD & logical(t_Y))/sum(logical(t_Y));
-    P_faSVD(gam_i) = sum(dSVD & ~logical(t_Y))/sum(~logical(t_Y));
+    P_dSVD(gam_i)   = sum(dSVD & logical(t_Y))/sum(logical(t_Y));
+    P_faSVD(gam_i)  = sum(dSVD & ~logical(t_Y))/sum(~logical(t_Y));
     
-    P_dKSVD(gam_i) = sum(dKSVD & logical(t_Y))/sum(logical(t_Y));
+    P_dKSVD(gam_i)  = sum(dKSVD & logical(t_Y))/sum(logical(t_Y));
     P_faKSVD(gam_i) = sum(dKSVD & ~logical(t_Y))/sum(~logical(t_Y));
     
-%     P_dLP(gam_i) = sum(dLP & logical(t_Y))/sum(logical(t_Y));
-%     P_faLP(gam_i) = sum(dLP & ~logical(t_Y))/sum(~logical(t_Y));
+%     P_dLP(gam_i)    = sum(dLP & logical(t_Y))/sum(logical(t_Y));
+%     P_faLP(gam_i)   = sum(dLP & ~logical(t_Y))/sum(~logical(t_Y));
     
     gam_i = gam_i +1;
 end
@@ -395,6 +401,7 @@ resSVD  = [P_dSVD(gamkSVD), P_faSVD(gamkSVD)];
 resKSVD = [P_dKSVD(gamkKSVD), P_faKSVD(gamkKSVD)];
 %resLP   = [P_dLP(gamkLP), P_faLP(gamkLP)];
 
+% Plotting ROCs and labeling Knee-Points
 hndl=figure;
 hold on
 plot(P_faSVD,P_dSVD,P_faKSVD,P_dKSVD);%plot(P_faSVD,P_dSVD,P_faKSVD,P_dKSVD,P_faLP,P_dLP );%
@@ -407,17 +414,16 @@ hold off
 cd(dirm);
 print(hndl,['0910fil',num2str(sigA),'aMSD.png'],'-dpng');
 cd(home);
-% adjusting our decisions to 'Previously computed kneepoint gamma'
 
-%dplain = zeros(K,1);
+
 dSVD = zeros(K,1);
 dKSVD = zeros(K,1);
 %dLP = zeros(K,1);
 
 alpha = 0.02;
 
-
-
+% 'Neyman-Pearson' Gamma that admits no more than alpha P_fa can be used
+% for binary confusion matrix...
 [~, gamnpSVD]   = min(abs(alpha-P_faSVD));
 [~, gamnpKSVD]  = min(abs(alpha-P_faKSVD));
 %[~, gamnpLP]    = min(abs(alpha-P_faLP));
@@ -428,17 +434,15 @@ alpha = 0.02;
  dKSVD(k)   = jmin_TKSVD(k)/jmin_NTKSVD(k) < gammas(gamkKSVD);
  %dLP(k)     = jmin_TLP(k)/jmin_NTLP(k) < gammas(gamkLP); %gammas(gamk);
  end
- 
-
+% decisions we made with a kneepoint gamma-------------^
 m_YSVD  = dSVD;
 m_YKSVD = dKSVD;
 %m_YLP   = dLP;
 
-
-
 [CSVD, order]   = confusionmat(t_Y,m_YSVD);
 [CKSVD, order]  = confusionmat(t_Y,m_YKSVD);
 %[CLP, order]    = confusionmat(t_Y,m_YLP);
+
 % Normalizing Confusion Matrix
 for j = 1:length(order)
 
