@@ -1,7 +1,7 @@
 % Input obj is a cell of strings with object names. range rho_w, rho_s are vectors of ranges water density
 % etc.
 
-function [ dirMap ] = buildDirsLsas(dir,exes,ins,envs,obj, ranges, aspects )
+function [ dirMap ] = buildDirsLsas(dir,exes,ins,envs,obj, ranges, aspects,runlen )
 % Returned from function, contains strings of each of the sub directories
 % containing halfspace.in and acolor.in...
 home = cd;
@@ -37,8 +37,8 @@ for e = 1:nenvs
                 copyfile(ins,objAspDir);
                 cd(objAspDir);
                 dirMap(e,o,r,a) = cellstr(cd);
-                run_el = createLsasRun(721,envs(e,3),ranges(r));
-                hndl = ['lsas.' num2str(ranges(r)) 'm.dat'];
+                run_el = createLsasRun(721,envs(e,3),runlen);
+                hndl = ['lsas.' num2str(runlen) 'm.dat'];
                 dlmwrite(hndl,run_el)
                 %save(hndl, 'run_el');                
                 cd('..\');

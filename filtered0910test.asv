@@ -36,9 +36,8 @@ envs(:,3) = 3.8*ones(length(c_w),1);
 % which of the 7 .ffn's to model
 objs    = [4,10,3,1]; 
 chirp   = [1 30]; % start and end freq of chirp defines center and BW
-runlen  = 21;
 cd(home);
-dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
+dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp);
 cd(dirm);
 save('dirMapDBFRM.mat','dirMapDBFRM');
 
