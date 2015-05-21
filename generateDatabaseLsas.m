@@ -73,7 +73,7 @@ function [dirMap] = generateDatabaseLsas(dir,envs,ranges, rots, obs, chirp)
     dirMap = buildDirsLsas(dir,exes,ins, envs ,objs(obs), ranges , rots);
 
     %% Fixing Dummy Data to have meaningful values
-    %  Fixing the .in files with the changed data
+    %  Fixing the .in files with the changed data; a non-fruitful fxn
     fixInsLsas(dirMap,envs,objs(obs),objData(obs,:),ranges,rots,chirp);
 
     %% Generating ACP's

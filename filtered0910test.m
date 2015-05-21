@@ -14,7 +14,8 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-
+% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% % hard-coded, change them to your local directories!
 % cd(above);
 % dirFRM  = 'DBFRM';
 % mkdir(dirFRM);
@@ -49,7 +50,7 @@ cd(home);
 % realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
 %     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
 % [Y, t_Y, Dclutter] = realACfetch0910(realTarg); % !!!This script has the
-% % 'UW Pond' Directory hardcoded in, change it (line 12 of realACfetch0910)
+% % 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
 % % to your Target Data dir!!!
 % 
 % %Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);

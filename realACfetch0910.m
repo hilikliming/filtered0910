@@ -1,21 +1,22 @@
 function [ Y, t_Y, Dclutter ] = realACfetch0910( realTarg )
-home = cd;
+home     = cd;
 targetID = 1;
-Y = []; t_Y = [];
-upperF = 30e3;
-f_s = 100e3;
+Y   = []; 
+t_Y = [];
+upperF  = 30e3; % Chosen based on SERDP MR-1665-FR Final Report
+f_s     = 100e3;%
 
-eps = 30; %Experimentally determined threholding value for grabbing important aspects
+eps      = 30; %Experimentally determined threholding value for grabbing important aspects
 Dclutter = [];
 
 for tag = realTarg
     cd(['C:\Users\halljj2\Desktop\WMSC-CODE\UW Pond\TARGET_DATA\',char(tag),'\PROUD_10m']);
-    here = cd;
+    here = cd; % Where the object run .mat files are located
     x = what; x = x.mat;
-    % Various rotations of orientation in each run
+    % Various rotations of orientation are captured in each run
     for run = 1:length(x)
-        if(strfind(char(x(run)),'norm'))
-            ob=open(char(x(run)));
+        if(strfind(char(x(run)),'norm')) % if it's well conditioned type
+            ob=open(char(x(run))); % char() just converts the cell to string
             cd(home);
             TS = extractAC(ob.new_data,eps,301,upperF,f_s,186);
             if(strfind(char(x(run)),'ROCK'))
