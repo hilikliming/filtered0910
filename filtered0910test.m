@@ -4,20 +4,20 @@
 
 clear all;
 %clc;
-home =cd;
-above = '../';
+home    =   cd;
+above   =   '../';
 cd(above);
-dirm = 'TestMATS'; % Directory where various matrices are saved (above repository)
+dirm    =   'TestMATS'; % Directory where various matrices are saved (above repository)
 %mkdir(dirm);
 cd(dirm);
-dirm = cd;
+dirm    =   cd;
 cd(home);
 
-%% Generating FRM database
+%% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
 % cd(above);
-% dir = 'DBFRM';
-% mkdir(dir);
-% cd(dir);dir = cd;
+% dirFRM  = 'DBFRM';
+% mkdir(dirFRM);
+% cd(dirFRM);dirFRM = cd;
 % % Parameters for generateDatabaseLsas indicates environment conditions,
 % % ranges, and target rotations to be modeled
 % ranges = 10;%9.5:0.5:10.5;
@@ -27,14 +27,15 @@ cd(home);
 % % rotations to model
 % rots = 0:20:360;
 % % environment parameters to model, water, sediment speed, interface elevation
-% envs = zeros(length(c_w),3);
+% envs      = zeros(length(c_w),3);
 % envs(:,1) = c_w;
 % envs(:,2) = c_s;
 % envs(:,3) = 3.8*ones(length(c_w),1);
 % % which of the 7 .ffn's to model
-% objs = [4,10,3,1]; chirp = [1 30];
+% objs    = [4,10,3,1]; 
+% chirp   = [1 30]; % start and end freq of chirp defines center and BW
 % cd(home);
-% dirMapDBFRM = generateDatabaseLsas(dir,envs,ranges,rots,objs,chirp);
+% dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp);
 % cd(dirm);
 % save('dirMapDBFRM.mat','dirMapDBFRM');
 
@@ -42,16 +43,19 @@ cd(dirm);
 load('dirMapDBFRM.mat');
 cd(home);
 
-%% FORMING OBSERVATION MATRIX OF all usable parts of the Filtered Runs
+%% Forming OBSERVATION (Testing) Matrix of all usable parts of the Filtered Runs
 % realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
 %     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
-% [Y, t_Y, Dclutter] = realACfetch0910(realTarg);
+% [Y, t_Y, Dclutter] = realACfetch0910(realTarg); % !!!This script has the
+% % 'UW Pond' Directory hardcoded in, change it (line 12 of realACfetch0910)
+% % to your Target Data dir!!!
 % 
 % %Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
 % cd(dirm);
 % save('Y.mat','Y');
 % save('t_Y.mat','t_Y');
 % save('Dclutter.mat','Dclutter');
+
 cd(dirm);
 load('Y.mat');
 load('t_Y.mat');
@@ -81,18 +85,17 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 
 
 %% Extracting and Sampling Training Templates
-% Ytrain=getTrainingSamples(dirMapDBFRM(:,:,:,:));
-% Ytrain(5).D=DcTrain;
+% Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
+% Ytrain(5).D  = DcTrain;
 %  
 % % Sub-sampling and organizing our training data to two classes for training
-% % YData = [];
-% R_m = struct([]);
-% mu_m = struct([]);
 % YtrainSub = struct([]);
-pickDs =[1,2;3,4];
+% R_m     = struct([]);
+% mu_m    = struct([]);
+% pickDs  = [1,2;3,4];
 % 
 % for m = 1:size(pickDs,1)
-%     DD=[];
+%     DD =[];
 %     for c = pickDs(m,:)
 %         if(c>0)
 %             if(c~=5)
@@ -101,15 +104,14 @@ pickDs =[1,2;3,4];
 %                 pick =1:size(Ytrain(c).D,2);
 %             end
 %         D = Ytrain(c).D;
-%         %D = 0.9*D/max(max(D));
 %         D = D(:,pick);
 %         DD = [DD,D];
 %         end
 %     end
 %     R_m(m).R = inv(cov(DD')^(1/2));
 %     mu_m(m).mu= mean(DD,2);
-%     YtrainSub(m).D= DD;%*(eye(size(DD,2))-ones(size(DD,2),1)*ones(size(DD,2),1)'/size(DD,2));
-%     %YData = [YData,D];
+%     YtrainSub(m).D= DD;
+% 
 % end
 % 
 % cd(dirm);
@@ -132,69 +134,71 @@ cd(home);
 % param.coeffCutoff           = 0.001; % cutoff for coefficient magnitude to consider it as contributing
 % 
 % % Parameters related to sparse coding stage
-% coding.method = 'MP';
-% coding.errorFlag = 1;            
-% coding.errorGoal = 1e-4; % 1e-4 % allowed representation error for each signal (only if errorFlag = 1)
 % coding.denoise_gamma = 0.1;
+% coding.method    = 'MP';
+% coding.errorFlag = 1;            
+% coding.errorGoal = 1e-4; % allowed representation error for each signal (only if errorFlag = 1)
+% coding.eta       = 1e-6; % Used in LP-KSVD
+% coding.tau       = 15;   % Used in OMP during Sparse coding phase of KSVD
+% coding.L         = coding.tau;
 % 
-% coding.eta = 1e-6;
-% 
-% %D_plain = struct([]);
-% D_SVD = struct([]);
+% D_SVD  = struct([]);
 % D_KSVD = struct([]);
-% %D_LP = struct([]);
-% DD = [];
-% Data=[];
+% %D_LP   = struct([]);
 % 
-% ms= [350,350,350,350,15]; % number of atoms to train for each class
 % 
-% coding.tau = 15;
+% DD   =[];% Used in collecting random samples from each class to start LP-KSVD dictionary
+% Data =[];% Used in collecting training samples from each class for LP-KSVD
+% 
+% ms   =[350,350,350,350,15]; % number of atoms to train for each class
 % % Creating SVD and KSVD dictionaries and accumulating KSVD atoms for 
 % % LP-KSVD joint solution
 % 
-% sdsz=1
-% for m = 1:size(pickDs,1)
+% sdsz=0 % size of seed (real data used to help training samples) set to 0 for FRM only
+% for m = 1:size(pickDs,1) % for each row in pickDs (which groups objects into m classes)
 %     D = YtrainSub(m).D; 
-%     P = [];
-%     for c = pickDs(m,:)
-%         P = [ P Y(:,t_Y==c)];
+%     % Adding Real data content if sdsz>0
+%     if sdsz >0
+%         P = [];
+%         for c = pickDs(m,:) % using the classes in that row to seed the training samples
+%             P = [ P Y(:,t_Y==c)];
+%         end
+% 
+%         els = randsample(size(P,2),sdsz);
+%         D   = [D,P(:,els)];
 %     end
-%     els = randsample(size(P,2),sdsz);
-%     D = [D,P(:,els)];
 %     
-%     param.K  = ms(m);
-%     coding.L = coding.tau;
-%     
+%     %K-SVD Training
+%     param.K  = ms(m); % ms(m) tells how many atoms to train in class m
 %     [Dk,out] = KSVD(D,param,coding);
 %     Dk = orderDict(Dk,out.CoefMatrix);   
 %     D_KSVD(m).D = Dk;
 %     
-%     Data = [Data,D];
-%     DD = [DD,D(:,randsample(size(D,2),ms(m)));];
+%     Data = [Data,D]; % Collecting all training samples in group for LP-KSVD joint solution
+%     DD   = [DD,D(:,randsample(size(D,2),ms(m)));]; %seeding LP-KSVD dict with random vectors from class
 %     
-%     [U,S,V] = svd(D,'econ');
-%     D_SVD(m).D = U(:,1:301);%R_m(m).R*(U(:,1:ms(m))-mu_m(m).mu*ones(1,ms(m)));
+%     % SVD Training
+%     [U,S,V]     = svd(D,'econ');
+%     D_SVD(m).D  = U(:,1:301);%R_m(m).R*(U(:,1:ms(m))-mu_m(m).mu*ones(1,ms(m)));
 % end
+
+% % LP-KSVD Training on block matrix of Training samples (i.e. 'Data')
+% param.K= size(DD,2);
+% param.Dict = DD;
 % 
-% % param.K= size(DD,2);
-% % param.Dict = DD;
-% % %param.numIteration = param.numIteration*2;
-% % 
-% % DDD = LPKSVD(Data,param,coding);
-% % b=1;
-% % for m=1:size(pickDs,1)
-% % D_LP(m).D = DDD(:,b:b+ms(m)-1);
-% % b= ms(m)+b;
-% % end
+% DDD = LPKSVD(Data,param,coding);
+% b=1;
+% for m=1:size(pickDs,1)
+% D_LP(m).D = DDD(:,b:b+ms(m)-1);
+% b= ms(m)+b;
+% end
+
+% %% Saving the Learned Signal Subspaces
 % cd(dirm);
 % save('D_SVD.mat','D_SVD');
 % save('D_KSVD.mat','D_KSVD');
-% save('D_LP.mat','D_LP');
+% %save('D_LP.mat','D_LP');
 
-% % %save('D_plain.mat','D_plain');
-% 
-% %D_plain = load('D_plain'); D_plain=D_plain.D_plain;
-% 
 cd(dirm);
 load('D_SVD.mat'); %D_SVD=D_SVD.D_SVD;
 load('D_KSVD.mat'); %D_KSVD=D_KSVD.D_KSVD;
@@ -223,7 +227,8 @@ mSVD    =   [10 10 40 40 0]%[75 80 230 100 0]%[95 125 0 90 29]%[7,9,17,15,4]%
 mKSVD   =   [15 15 350 350 0]%[120 225 350 349 0]%[231 235 0 297 28] %[0 10 0 10 0] -> ~75%
 %mLP     =   [350 350 300 350 15]%[10,10];%[8 7 8 10 0];
 
-% To account for discrepancy in lower frequencies of model
+% To account for discrepancy in lower frequencies of model (not currently
+% in use hence the '[]'
 h_bias = [];%zeros(301,1); 
 %h_bias(1:10)=1; 
 %h_bias(11)=1.3; 
@@ -250,13 +255,6 @@ d_YKSVD = OMPWMSC(Y,D_KSVD,mu_m,R_m,est,sigA,tauK);%WMSC(Y,D_KSVD,mu_m,R_m,est,s
 %d_YLP   = LocalWMSC(Y,D_LP,mu_m,R_m,est,sigA,tauLP,1e-6);%%WMSC(Y,D_LP,mu_m,R_m,est,sigA);
 
 %% Displaying Results comparison
-
-% figure;
-% plot(d_Yplain);
-% title('Raw Training');
-% legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4','J_C');
-% axis([0,size(Y,2),min(min(d_Yplain)),max(max(d_Yplain))]);
-
 figure;
 plot(d_YSVD);
 title('SVD');
@@ -277,20 +275,15 @@ axis([0,size(Y,2),min(min(d_YKSVD)),max(max(d_YKSVD))]);
 
 %% Documenting Result/Performance for Analysis
 
-
-%% CONVERTING TRUTH TABLE TO BINARY DECISIONS
+%CONVERTING TRUTH TABLE TO BINARY DECISIONS
 % UXO vs. non-UXO (last 4 are cylinder, pipe, rocks)
 % First 2 are aluxo, ssuxo
 origT = t_Y;
 t_Y(t_Y==1|t_Y==2)= 1;
 t_Y(t_Y~=1)= 0;
 
-%% Initializing min discriminant value vector for K observations and a
+% Initializing min discriminant value vector for K observations and a
 % decision vector m_P
-
-
-% jmin_Tplain = zeros(K,1);
-% jmin_NTplain = zeros(K,1);
 
 jmin_TSVD = zeros(K,1);
 jmin_NTSVD = zeros(K,1);
@@ -301,7 +294,7 @@ jmin_NTKSVD = zeros(K,1);
 % jmin_TLP = zeros(K,1);
 % jmin_NTLP = zeros(K,1);
 
-%m_Yplain=zeros(K,1);
+
 m_YSVD = zeros(K,1);
 m_YKSVD = zeros(K,1);
 %m_YLP = zeros(K,1);
@@ -314,9 +307,6 @@ NT = [2];%[3,4];%[3,4,5];
 % Finding minimal value from UXO and non UXO families of classes
 for k = 1:K
 % Strict Class decision
-% [~, m_Yplain(k)] = min(d_Yplain(k,:));
-% jmin_Tplain(k) = min(d_Yplain(k,T));%*norm(d_YSVD(k,T));
-% jmin_NTplain(k) = min(d_Yplain(k,NT));%*norm(d_YSVD(k,NT));
 [~, m_YSVD(k)] = min(d_YSVD(k,:));
 jmin_TSVD(k) = min(d_YSVD(k,T));%/norm(d_YSVD(k,T));
 jmin_NTSVD(k) = min(d_YSVD(k,NT));%/norm(d_YSVD(k,NT));
@@ -331,20 +321,19 @@ end
 % Setting UXO class I for objects classified as 1,2 or 3, other non UXO
 % detections become non UXO class 0
 
-%origMplain = m_Yplain;
+
 origMSVD = m_YSVD;
 origMKSVD = m_YKSVD;
 %origMLP = m_YLP;
 
 for t = T
 
-%m_Yplain(m_Yplain==t)=1;
 m_YSVD(m_YSVD==t) = 1;
 m_YKSVD(m_YKSVD==t) = 1;
 %m_YLP(m_YLP==t) = 1;
 end
 
-%m_Yplain(m_Yplain~=1) = 0;
+
 m_YSVD(m_YSVD~=1) = 0;
 m_YKSVD(m_YKSVD~=1) = 0;
 %m_YLP(m_YLP~=1) = 0;
@@ -352,10 +341,6 @@ m_YKSVD(m_YKSVD~=1) = 0;
 %% ROC Curve Forming
 gammas  = 0.2:1e-2:2.5;
 gammas  = [gammas, 100];
-
-
-% P_dplain     = zeros(length(gammas),1);
-% P_faplain    = P_dplain;
 
 P_dSVD     = zeros(length(gammas),1);
 P_faSVD    = P_dSVD;
@@ -369,27 +354,23 @@ P_faKSVD   = P_dSVD;
 gam_i   = 1;
 
 for gamma = gammas
-    %dplain = zeros(K,1);
+
     dSVD = zeros(K,1);
     dKSVD = zeros(K,1);
     %dLP = zeros(K,1);
     for k = 1:K
         %If the J_m that lies closest to m subspace is still too great we
         %say it's a target
-        %dplain(k) = (jmin_Tplain(k)/jmin_NTplain(k) < gamma);
+
         dSVD(k) = (jmin_TSVD(k)/jmin_NTSVD(k) < gamma);
         dKSVD(k) = (jmin_TKSVD(k)/jmin_NTKSVD(k) < gamma);
         %dLP(k) = (jmin_TLP(k)/jmin_NTLP(k) < gamma);
     end
     
-    %dplain = logical(dplain);
-    
     dSVD = logical(dSVD);
     dKSVD = logical(dKSVD);
     %dLP = logical(dLP);
     
-%     P_dplain(gam_i) = sum(dplain & logical(t_Y))/sum(logical(t_Y));
-%     P_faplain(gam_i) = sum(dplain & ~logical(t_Y))/sum(~logical(t_Y));
     
     P_dSVD(gam_i) = sum(dSVD & logical(t_Y))/sum(logical(t_Y));
     P_faSVD(gam_i) = sum(dSVD & ~logical(t_Y))/sum(~logical(t_Y));
@@ -405,15 +386,11 @@ end
 
 % Finding the knee point
 
-%[~,gamkplain] = min(abs(1-(P_dplain+P_faplain)));
 [~,gamkSVD]     = min(abs(1-(P_dSVD+P_faSVD)));
 [~,gamkKSVD]    = min(abs(1-(P_dKSVD+P_faKSVD)));
 %[~,gamkLP]      = min(abs(1-(P_dLP+P_faLP)));
 
 
-% ['gamma_k = ' num2str(gammas(gamk))];
-
-%resplain = [P_dplain(gamkplain), P_faplain(gamkplain)];
 resSVD  = [P_dSVD(gamkSVD), P_faSVD(gamkSVD)];
 resKSVD = [P_dKSVD(gamkKSVD), P_faKSVD(gamkKSVD)];
 %resLP   = [P_dLP(gamkLP), P_faLP(gamkLP)];
@@ -440,41 +417,36 @@ dKSVD = zeros(K,1);
 alpha = 0.02;
 
 
-%[~, gamnpplain] = min(abs(alpha-P_faplain));
+
 [~, gamnpSVD]   = min(abs(alpha-P_faSVD));
 [~, gamnpKSVD]  = min(abs(alpha-P_faKSVD));
 %[~, gamnpLP]    = min(abs(alpha-P_faLP));
 
  for k = 1:K
- %dplain(k) = jmin_Tplain(k)/jmin_NTplain(k) < gammas(gamkplain);
+
  dSVD(k)    = jmin_TSVD(k)/jmin_NTSVD(k) < gammas(gamkSVD);
  dKSVD(k)   = jmin_TKSVD(k)/jmin_NTKSVD(k) < gammas(gamkKSVD);
  %dLP(k)     = jmin_TLP(k)/jmin_NTLP(k) < gammas(gamkLP); %gammas(gamk);
  end
  
 
-%m_Yplain = dplain;
 m_YSVD  = dSVD;
 m_YKSVD = dKSVD;
 %m_YLP   = dLP;
 
 
-%[Cplain, order] = confusionmat(t_Y,m_Yplain);
+
 [CSVD, order]   = confusionmat(t_Y,m_YSVD);
 [CKSVD, order]  = confusionmat(t_Y,m_YKSVD);
 %[CLP, order]    = confusionmat(t_Y,m_YLP);
 % Normalizing Confusion Matrix
 for j = 1:length(order)
-    
-    %Cplain(j,:) = Cplain(j,:)./sum(Cplain(j,:)+~any(Cplain(j,:)));
+
     CSVD(j,:)   = CSVD(j,:)./sum(CSVD(j,:)+~any(CSVD(j,:)));
     CKSVD(j,:)  = CKSVD(j,:)./sum(CKSVD(j,:)+~any(CKSVD(j,:)));
     %CLP(j,:)    = CLP(j,:)./sum(CLP(j,:)+~any(CLP(j,:)));
 end
-%figure; surf(C);
 
-% disp('Raw Train Binary Confusion Matrix:');
-% disp(Cplain);
 disp('SVD Binary Confusion Matrix:');
 disp(CSVD);
 disp('K-SVD Binary Confusion Matrix:');
@@ -482,7 +454,6 @@ disp(CKSVD);
 % disp('LP Binary Confusion Matrix:');
 % disp(CLP);
 
-%[Cmplain, order] = confusionmat(origT,origMplain);
 [CmSVD, order]  = confusionmat(origT,origMSVD);
 [CmKSVD, order] = confusionmat(origT,origMKSVD);
 %[CmLP, order]   = confusionmat(origT,origMLP);
@@ -490,15 +461,10 @@ disp(CKSVD);
 % Normalizing Confusion Matrix
 for j = 1:length(order)
     
-    %Cmplain(j,:) = Cmplain(j,:)./sum(Cmplain(j,:)+~any(Cmplain(j,:)));
     CmSVD(j,:)  = CmSVD(j,:)./sum(CmSVD(j,:)+~any(CmSVD(j,:)));
     CmKSVD(j,:) = CmKSVD(j,:)./sum(CmKSVD(j,:)+~any(CmKSVD(j,:)));
     %CmLP(j,:)   = CmLP(j,:)./sum(CmLP(j,:)+~any(CmLP(j,:)));
 end
-%figure; surf(C);
-
-% disp('Raw Train M-Class Confusion Matrix:');
-% disp(Cmplain);
 
 disp('SVD M-Class Confusion Matrix:');
 disp(CmSVD);
@@ -511,7 +477,7 @@ disp(CmKSVD);
 
 
 
-%resplain
+
 resSVD
 resKSVD
 %resLP
