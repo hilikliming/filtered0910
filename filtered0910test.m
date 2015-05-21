@@ -96,7 +96,7 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 % YtrainSub = struct([]);
 % R_m     = struct([]);
 % mu_m    = struct([]);
-% pickDs  = [1,2;3,4];
+ pickDs  = [1,2;3,4];
 % 
 % for m = 1:size(pickDs,1)
 %     DD =[];
@@ -228,8 +228,8 @@ end
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [10 10]
-mKSVD   =   [15 15]
+mSVD    =   [30 30]
+mKSVD   =   [250 250]
 %mLP     =   [350 350 300 350 15]
 
 % To account for discrepancy in lower frequencies of model (not currently
