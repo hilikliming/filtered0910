@@ -253,7 +253,7 @@ end
 %% Running the WMSC
 est  = 'MSD'
 sigA = 1 % Number of Aspects used per decision
-tauK = 10;
+tauK = 5;
 %tauLP =1;
 
 d_YSVD = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
