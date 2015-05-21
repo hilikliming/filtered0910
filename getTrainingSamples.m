@@ -14,7 +14,7 @@ for obj = 1:size(trainList,2)
         ob = open(char(x));
         AC = ob.acp'; % Opening AC in directory
         cd(home);
-        DD = [DD,formatACLsas(AC,301)]; % This script outputs target strength
+        DD = [DD,formatACLsas(AC,301)]; % This script outputs AC's w/ N=301
         i = i +1;
     end
   end
