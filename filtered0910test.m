@@ -90,39 +90,46 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 
 %% Extracting and Sampling Training Templates
 
-% Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
-% Ytrain(5).D  = DcTrain;
-%  
-% % Sub-sampling and organizing our training data to two classes for training
-% YtrainSub = struct([]);
-% R_m     = struct([]);
-% mu_m    = struct([]);
-% pickDs  = [1,2;3,4];
-% 
-% for m = 1:size(pickDs,1)
-%     DD =[];
-%     for c = pickDs(m,:)
-%         if(c>0)
-%             if(c~=5)
-%                 pick = randsample(size(Ytrain(c).D,2),floor(1/4*size(Ytrain(c).D,2)));
-%             else
-%                 pick =1:size(Ytrain(c).D,2);
-%             end
-%         D = Ytrain(c).D;
-%         D = D(:,pick);
-%         DD = [DD,D];
-%         end
-%     end
-%     R_m(m).R = inv(cov(DD')^(1/2));
-%     mu_m(m).mu= mean(DD,2);
-%     YtrainSub(m).D= DD;
-% 
-% end
-% 
-% cd(dirm);
-% save('R_m.mat','R_m');
-% save('mu_m.mat','mu_m');
-% save('YtrainSub.mat','YtrainSub');
+Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
+Ytrain(5).D  = DcTrain;
+
+cd(dirm);
+save('Ytrain.mat','Ytrain');
+
+cd(dirm);
+load('Ytrain.mat');
+cd(home);
+ 
+% Sub-sampling and organizing our training data to two classes for training
+YtrainSub = struct([]);
+R_m     = struct([]);
+mu_m    = struct([]);
+pickDs  = [1,2;3,4];
+
+for m = 1:size(pickDs,1)
+    DD =[];
+    for c = pickDs(m,:)
+        if(c>0)
+            if(c~=5)
+                pick = randsample(size(Ytrain(c).D,2),floor(1/4*size(Ytrain(c).D,2)));
+            else
+                pick =1:size(Ytrain(c).D,2);
+            end
+        D = Ytrain(c).D;
+        D = D(:,pick);
+        DD = [DD,D];
+        end
+    end
+    R_m(m).R = inv(cov(DD')^(1/2));
+    mu_m(m).mu= mean(DD,2);
+    YtrainSub(m).D= DD;
+
+end
+
+cd(dirm);
+save('R_m.mat','R_m');
+save('mu_m.mat','mu_m');
+save('YtrainSub.mat','YtrainSub');
 
 cd(dirm);
 load('YtrainSub.mat');

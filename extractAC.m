@@ -29,8 +29,8 @@ aAC = aAC(:,sum(abs(aAC),1)>eps);
 
 % Windowing Useable spectral power
 binsize = f_s/size(AC,1);
-aAC     = aAC(1:ceil(upperf/binsize),:);
-
+%aAC     = aAC(1:ceil(upperf/binsize),:);
+aAC     = aAC(1:605,:);
 % For each aspect, decimate frequency bins to desired signal length
 rAC = zeros(sigN,size(aAC,2));
 for i = 1:size(aAC,2)
