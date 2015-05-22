@@ -22,7 +22,7 @@ AC  = AC(:,sum(abs(AC),1)>1);
 
 % Decimate along aspect
 for i = 1:size(AC,1)
-aAC(i,:) = resample(AC(i,:),aper,size(AC,2));
+aAC(i,:) = resample(double(AC(i,:)),aper,size(AC,2));
 end
 % Select enhanced aspects in the in center (the 'norm' ones all have this)
 aAC = aAC(:,sum(abs(aAC),1)>eps);

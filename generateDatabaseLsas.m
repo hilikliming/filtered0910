@@ -70,11 +70,11 @@ function [dirMap] = generateDatabaseLsas(dir,envs,ranges, rots, obs, chirp, runl
 %     cd('..\')
     
     %% Creating the Directories in 'dir' which we will populate with dummy .in files
-    dirMap = buildDirsLsas(dir,exes,ins, envs ,objs(obs), ranges , rots,runlen);
+    dirMap = buildDirsLsas(dir,exes,ins, envs ,objs(obs), ranges , rots, runlen);
 
     %% Fixing Dummy Data to have meaningful values
     %  Fixing the .in files with the changed data; a non-fruitful fxn
-    fixInsLsas(dirMap,envs,objs(obs),objData(obs,:),ranges,rots,chirp,runlen);
+    fixInsLsas(dirMap,envs,objs(obs),objData(obs,:),ranges,rots,chirp, runlen);
 
     %% Generating ACP's
     % Generating the database

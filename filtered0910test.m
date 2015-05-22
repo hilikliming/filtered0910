@@ -13,7 +13,7 @@ cd(dirm);
 dirm    =   cd;
 cd(home);
 
-%% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
+% %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
 % % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
 % % hard-coded, change them to your local directories!
 % cd(above);
@@ -36,7 +36,7 @@ cd(home);
 % % which of the 7 .ffn's to model
 % objs    = [4,10,3,1]; 
 % chirp   = [1 30]; % start and end freq of chirp defines center and BW
-% runlen  = 21;
+% runlen  = [21,769]; %length meters, stops
 % cd(home);
 % dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
 % cd(dirm);
@@ -97,14 +97,14 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 % YtrainSub = struct([]);
 % R_m     = struct([]);
 % mu_m    = struct([]);
-pickDs  = [1,2;3,4];
+% pickDs  = [1,2;3,4];
 % 
 % for m = 1:size(pickDs,1)
 %     DD =[];
 %     for c = pickDs(m,:)
 %         if(c>0)
 %             if(c~=5)
-%                 pick = randsample(size(Ytrain(c).D,2),floor(1/3*size(Ytrain(c).D,2)));
+%                 pick = randsample(size(Ytrain(c).D,2),floor(1/4*size(Ytrain(c).D,2)));
 %             else
 %                 pick =1:size(Ytrain(c).D,2);
 %             end
@@ -130,78 +130,78 @@ cd(home);
 
 %% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
 
-% param.numIteration          = 25; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
-% param.preserveDCAtom        = 0;
-% param.InitializationMethod  = 'DataElements';
-% param.displayProgress       = 1;
-% param.minFracObs            = -.1; % min % of observations an atom must contribute to, else it is replaced
-% param.maxIP                 = 0.995; % maximum inner product allowed betweem atoms, else it is replaced
-% param.coeffCutoff           = 0.001; % cutoff for coefficient magnitude to consider it as contributing
-% 
-% % Parameters related to sparse coding stage
-% coding.denoise_gamma = 0.1;
-% coding.method    = 'MP';
-% coding.errorFlag = 1;            
-% coding.errorGoal = 1e-4; % allowed representation error for each signal (only if errorFlag = 1)
-% coding.eta       = 1e-6; % Used in LP-KSVD
-% coding.tau       = 10;   % Used in OMP during Sparse coding phase of KSVD
-% coding.L         = coding.tau;
-% 
-% D_SVD  = struct([]);
-% D_KSVD = struct([]);
-% %D_LP   = struct([]);
-% 
-% 
-% DD   =[];% Used in collecting random samples from each class to start LP-KSVD dictionary
-% Data =[];% Used in collecting training samples from each class for LP-KSVD
-% 
-% ms   =[350,350,350,350,15]; % number of atoms to train for each class
-% % Creating SVD and KSVD dictionaries and accumulating KSVD atoms for 
-% % LP-KSVD joint solution
-% 
-% sdsz=0 % size of seed (real data used to help training samples) set to 0 for FRM only
-% for m = 1:size(pickDs,1) % for each row in pickDs (which groups objects into m classes)
-%     D = YtrainSub(m).D; 
-%     % Adding Real data content if sdsz>0
-%     if sdsz >0
-%         P = [];
-%         for c = pickDs(m,:) % using the classes in that row to seed the training samples
-%             P = [ P Y(:,t_Y==c)];
-%         end
-% 
-%         els = randsample(size(P,2),sdsz);
-%         D   = [D,P(:,els)];
-%     end
-%     
-%     %K-SVD Training
-%     param.K  = ms(m); % ms(m) tells how many atoms to train in class m
-%     [Dk,out] = KSVD(D,param,coding);
-%     Dk = orderDict(Dk,out.CoefMatrix);   
-%     D_KSVD(m).D = Dk;
-%     
-%     Data = [Data,D]; % Collecting all training samples in group for LP-KSVD joint solution
-%     DD   = [DD,D(:,randsample(size(D,2),ms(m)));]; %seeding LP-KSVD dict with random vectors from class
-%     
-%     % SVD Training
-%     [U,S,V]     = svd(D,'econ');
-%     D_SVD(m).D  = U(:,1:301);%R_m(m).R*(U(:,1:ms(m))-mu_m(m).mu*ones(1,ms(m)));
-% end
-% 
-% % % % LP-KSVD Training on block matrix of Training samples (i.e. 'Data')
-% % % param.K= size(DD,2);
-% % % param.Dict = DD;
-% % % 
-% % % DDD = LPKSVD(Data,param,coding);
-% % % b=1;
-% % % for m=1:size(pickDs,1)
-% % % D_LP(m).D = DDD(:,b:b+ms(m)-1);
-% % % b= ms(m)+b;
-% % % end
-% 
-% %% Saving the Learned Signal Subspaces
-% cd(dirm);
-% save('D_SVD.mat','D_SVD');
-% save('D_KSVD.mat','D_KSVD');
+param.numIteration          = 15; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
+param.preserveDCAtom        = 0;
+param.InitializationMethod  = 'DataElements';
+param.displayProgress       = 1;
+param.minFracObs            = -.1; % min % of observations an atom must contribute to, else it is replaced
+param.maxIP                 = 0.995; % maximum inner product allowed betweem atoms, else it is replaced
+param.coeffCutoff           = 0.001; % cutoff for coefficient magnitude to consider it as contributing
+
+% Parameters related to sparse coding stage
+coding.denoise_gamma = 0.1;
+coding.method    = 'MP';
+coding.errorFlag = 1;            
+coding.errorGoal = 1e-4; % allowed representation error for each signal (only if errorFlag = 1)
+coding.eta       = 1e-6; % Used in LP-KSVD
+coding.tau       = 15;   % Used in OMP during Sparse coding phase of KSVD
+coding.L         = coding.tau;
+
+D_SVD  = struct([]);
+D_KSVD = struct([]);
+%D_LP   = struct([]);
+
+
+DD   =[];% Used in collecting random samples from each class to start LP-KSVD dictionary
+Data =[];% Used in collecting training samples from each class for LP-KSVD
+
+ms   =[190,280]%[150,150,150,150,15]; % number of atoms to train for each class
+% Creating SVD and KSVD dictionaries and accumulating KSVD atoms for 
+% LP-KSVD joint solution
+
+sdsz=0 % size of seed (real data used to help training samples) set to 0 for FRM only
+for m = 1:size(pickDs,1) % for each row in pickDs (which groups objects into m classes)
+    D = YtrainSub(m).D; 
+    % Adding Real data content if sdsz>0
+    if sdsz >0
+        P = [];
+        for c = pickDs(m,:) % using the classes in that row to seed the training samples
+            P = [ P Y(:,t_Y==c)];
+        end
+
+        els = randsample(size(P,2),sdsz);
+        D   = [D,P(:,els)];
+    end
+    
+    %K-SVD Training
+    param.K  = ms(m); % ms(m) tells how many atoms to train in class m
+    [Dk,out] = KSVD(D,param,coding);
+    Dk = orderDict(Dk,out.CoefMatrix);   
+    D_KSVD(m).D = Dk;
+    
+    Data = [Data,D]; % Collecting all training samples in group for LP-KSVD joint solution
+    DD   = [DD,D(:,randsample(size(D,2),ms(m)));]; %seeding LP-KSVD dict with random vectors from class
+    
+    % SVD Training
+    [U,S,V]     = svd(D,'econ');
+    D_SVD(m).D  = U(:,1:301);%R_m(m).R*(U(:,1:ms(m))-mu_m(m).mu*ones(1,ms(m)));
+end
+
+% % % LP-KSVD Training on block matrix of Training samples (i.e. 'Data')
+% % param.K= size(DD,2);
+% % param.Dict = DD;
+% % 
+% % DDD = LPKSVD(Data,param,coding);
+% % b=1;
+% % for m=1:size(pickDs,1)
+% % D_LP(m).D = DDD(:,b:b+ms(m)-1);
+% % b= ms(m)+b;
+% % end
+
+%% Saving the Learned Signal Subspaces
+cd(dirm);
+save('D_SVD.mat','D_SVD');
+save('D_KSVD.mat','D_KSVD');
 % %save('D_LP.mat','D_LP');
 
 cd(dirm);
@@ -230,7 +230,7 @@ end
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
 mSVD    =   [190 280]
-mKSVD   =   [190 350]
+mKSVD   =   [190 280]
 %mLP     =   [350 350 300 350 15]
 
 % To account for discrepancy in lower frequencies of model (not currently
@@ -253,7 +253,7 @@ end
 %% Running the WMSC
 est  = 'MSD'
 sigA = 1 % Number of Aspects used per decision
-tauK = 5;
+tauK = 3;
 %tauLP =1;
 
 d_YSVD = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
