@@ -4,9 +4,9 @@ trainList = dirMapDB;
 i = 1;
 Ytrain = struct([]);
 upperf  = 30e3; % Chosen based on SERDP MR-1665-FR Final Report
-f_s     = 200e3;%
+f_s     = 201e3;%
 eps     = 1; %Experimentally determined threholding value for grabbing important aspects
-aper = 186; % half degree resolution
+aper    = 185; % half degree resolution
 sigN=301;
 
     for obj = 1:size(trainList,2)
