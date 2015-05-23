@@ -19,9 +19,7 @@ aAC = zeros(size(AC,1),aper);
 % Trimming AC to the 2-D tukey windowed portion (what comes out after the
 % invertible SAS spatial filtering that UW did to the 'filtered' runs')
 AC  = AC(:,sum(abs(AC),1)>1);
-% Windowing Useable spectral power
-binsize = f_s/size(AC,1);
-AC     = AC(1:ceil(upperf/binsize),:);
+
 % Decimate along aspect
 for i = 1:size(AC,1)
 aAC(i,:) = resample(double(AC(i,:)),aper,size(AC,2));
