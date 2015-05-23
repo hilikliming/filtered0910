@@ -14,33 +14,33 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-% !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
-% hard-coded, change them to your local directories!
-cd(above);
-dirFRM  = 'DBFRM';
-mkdir(dirFRM);
-cd(dirFRM);dirFRM = cd;
-% Parameters for generateDatabaseLsas indicates environment conditions,
-% ranges, and target rotations to be modeled
-ranges = 10;%9.5:0.5:10.5;
-%water and sediment sound speeds
-c_w = [1464,1530];
-c_s = [1694,1694];
-% rotations to model
-rots = 0:20:360;
-% environment parameters to model, water, sediment speed, interface elevation
-envs      = zeros(length(c_w),3);
-envs(:,1) = c_w;
-envs(:,2) = c_s;
-envs(:,3) = 3.8*ones(length(c_w),1);
-% which of the 7 .ffn's to model
-objs    = [4,10,3,1]; 
-chirp   = [1 31]; % start and end freq of chirp defines center and BW
-runlen  = [21,769]; %length meters, stops
-cd(home);
-dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
-cd(dirm);
-save('dirMapDBFRM.mat','dirMapDBFRM');
+% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% % hard-coded, change them to your local directories!
+% cd(above);
+% dirFRM  = 'DBFRM';
+% mkdir(dirFRM);
+% cd(dirFRM);dirFRM = cd;
+% % Parameters for generateDatabaseLsas indicates environment conditions,
+% % ranges, and target rotations to be modeled
+% ranges = 10;%9.5:0.5:10.5;
+% %water and sediment sound speeds
+% c_w = [1464,1530];
+% c_s = [1694,1694];
+% % rotations to model
+% rots = 0:20:360;
+% % environment parameters to model, water, sediment speed, interface elevation
+% envs      = zeros(length(c_w),3);
+% envs(:,1) = c_w;
+% envs(:,2) = c_s;
+% envs(:,3) = 3.8*ones(length(c_w),1);
+% % which of the 7 .ffn's to model
+% objs    = [4,10,3,1]; 
+% chirp   = [1 31]; % start and end freq of chirp defines center and BW
+% runlen  = [21,769]; %length meters, stops
+% cd(home);
+% dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
+% cd(dirm);
+% save('dirMapDBFRM.mat','dirMapDBFRM');
 
 cd(dirm);
 load('dirMapDBFRM.mat');
@@ -48,17 +48,17 @@ cd(home);
 
 %% Forming OBSERVATION (Testing) Matrix of all usable parts of the Filtered Runs
 
-% realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
-%     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
-% [Y, t_Y, Dclutter] = realACfetch0910(realTarg); % !!!This script has the
-% % 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
-% % to your Target Data dir!!!
-% 
-% %Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
-% cd(dirm);
-% save('Y.mat','Y');
-% save('t_Y.mat','t_Y');
-% save('Dclutter.mat','Dclutter');
+realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
+    'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
+[Y, t_Y, Dclutter] = realACfetch0910(realTarg); % !!!This script has the
+% 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
+% to your Target Data dir!!!
+
+%Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
+cd(dirm);
+save('Y.mat','Y');
+save('t_Y.mat','t_Y');
+save('Dclutter.mat','Dclutter');
 
 cd(dirm);
 load('Y.mat');
