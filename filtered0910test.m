@@ -110,7 +110,7 @@ for m = 1:size(pickDs,1)
     for c = pickDs(m,:)
         if(c>0)
             if(c~=5)
-                pick = randsample(size(Ytrain(c).D,2),floor(1/9*size(Ytrain(c).D,2)));
+                pick = randsample(size(Ytrain(c).D,2),floor(1/4*size(Ytrain(c).D,2)));
             else
                 pick =1:size(Ytrain(c).D,2);
             end

@@ -14,14 +14,13 @@ len = size(run,2);
 
 %% Begin Unpacking 
 AC  = abs(fft(run,[],2))';
-% Setting up smaller data structures for decimated form
-aAC = zeros(size(AC,1),aper);
-% Trimming AC to the 2-D tukey windowed portion (what comes out after the
-% invertible SAS spatial filtering that UW did to the 'filtered' runs')
-AC  = AC(:,sum(abs(AC),1)>1);
+
 % Windowing Useable spectral power
 binsize = f_s/size(AC,1);
-AC     = AC(1:ceil(upperf/binsize),:);
+AC      = AC(1:ceil(upperf/binsize),:);
+
+% Setting up smaller data structures for decimated form
+aAC = zeros(size(AC,1),aper);
 % Decimate along aspect
 for i = 1:size(AC,1)
 aAC(i,:) = resample(double(AC(i,:)),aper,size(AC,2));
@@ -29,7 +28,6 @@ end
 % Select enhanced aspects in the in center (the 'norm' ones all have this)
 aAC = aAC(:,sum(abs(aAC),1)>eps);
 
-%aAC     = aAC(1:605,:);
 % For each aspect, decimate frequency bins to desired signal length
 rAC = zeros(sigN,size(aAC,2));
 for i = 1:size(aAC,2)
