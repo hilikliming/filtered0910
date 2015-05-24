@@ -89,11 +89,11 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 
 
 %% Extracting and Sampling Training Templates
-Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
-Ytrain(5).D  = DcTrain;
-
-cd(dirm);
-save('Ytrain.mat','Ytrain');
+% Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
+% Ytrain(5).D  = DcTrain;
+% 
+% cd(dirm);
+% save('Ytrain.mat','Ytrain');
 
 cd(dirm);
 load('Ytrain.mat');
@@ -134,9 +134,9 @@ cd(dirm);
 load('YtrainSub.mat');
 cd(home);
 
-%% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
+% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
 
-param.numIteration          = 10; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
+param.numIteration          = 15; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
 param.preserveDCAtom        = 0;
 param.InitializationMethod  = 'DataElements';
 param.displayProgress       = 1;
@@ -150,7 +150,7 @@ coding.method    = 'MP';
 coding.errorFlag = 1;            
 coding.errorGoal = 1e-4; % allowed representation error for each signal (only if errorFlag = 1)
 coding.eta       = 1e-6; % Used in LP-KSVD
-coding.tau       = 10;   % Used in OMP during Sparse coding phase of KSVD
+coding.tau       = 20;   % Used in OMP during Sparse coding phase of KSVD
 coding.L         = coding.tau;
 
 D_SVD  = struct([]);
@@ -165,7 +165,7 @@ ms   =[150,150]%[150,150,150,150,15]; % number of atoms to train for each class
 % Creating SVD and KSVD dictionaries and accumulating KSVD atoms for 
 % LP-KSVD joint solution
 
-sdsz=0 % size of seed (real data used to help training samples) set to 0 for FRM only
+sdsz=10 % size of seed (real data used to help training samples) set to 0 for FRM only
 for m = 1:size(pickDs,1) % for each row in pickDs (which groups objects into m classes)
     D = YtrainSub(m).D; 
     % Adding Real data content if sdsz>0
@@ -208,7 +208,7 @@ end
 cd(dirm);
 save('D_SVD.mat','D_SVD');
 save('D_KSVD.mat','D_KSVD');
-% % %save('D_LP.mat','D_LP');
+% % % %save('D_LP.mat','D_LP');
 
 cd(dirm);
 load('D_SVD.mat'); %D_SVD=D_SVD.D_SVD;
@@ -235,7 +235,7 @@ end
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [120 150]
+mSVD    =   [20 50]
 mKSVD   =   [120 150]
 %mLP     =   [350 350 300 350 15]
 

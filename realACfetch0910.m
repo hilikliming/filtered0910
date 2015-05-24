@@ -6,7 +6,7 @@ t_Y = [];
 upperF  = 31e3; % Chosen based on SERDP MR-1665-FR Final Report
 f_s     = 100e3;%
 
-eps      = 30; %Experimentally determined threholding value for grabbing important aspects
+eps      = 1; %Experimentally determined threholding value for grabbing important aspects
 Dclutter = [];
 
 for tag = realTarg
@@ -15,16 +15,16 @@ for tag = realTarg
     x = what; x = x.mat;
     % Various rotations of orientation are captured in each run
     for run = 1:length(x)
-        if(strfind(char(x(run)),'norm')) % if it's well conditioned type
+        if(strfind(char(x(run)),'_norm')) % if it's well conditioned type
             ob=open(char(x(run))); % char() just converts the cell to string
             cd(home);
-            TS = extractAC(ob.new_data,eps,301,upperF,f_s,185);
+            AC = extractAC(ob.new_data,eps,301,upperF,f_s,185);
             if(strfind(char(x(run)),'ROCK'))
-                Dclutter = [Dclutter,TS];
+                Dclutter = [Dclutter,AC];
             else
                 % Extracting AC template from filtered run
-                Y   = [Y, TS];
-                t_Y = [t_Y', targetID*ones(size(TS,2),1)']';
+                Y   = [Y, AC];
+                t_Y = [t_Y', targetID*ones(size(AC,2),1)']';
             end
             cd(here);
         end
