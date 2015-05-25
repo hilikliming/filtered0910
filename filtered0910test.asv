@@ -69,16 +69,16 @@ cd(home);
 
 %% Opening and Partitioning Rock Data
 
-% % Shuffling Clutter Aspects
-% Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
-% 
-% % Splitting Clutter samples
-% DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
-% DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
-% 
-% cd(dirm);
-% save('DcTrain.mat','DcTrain');
-% save('DcTest.mat','DcTest');
+% Shuffling Clutter Aspects
+Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
+
+% Splitting Clutter samples
+DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
+DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
+
+cd(dirm);
+save('DcTrain.mat','DcTrain');
+save('DcTest.mat','DcTest');
 
 cd(dirm);
 load('DcTrain.mat');
@@ -101,39 +101,69 @@ load('Ytrain.mat');
 cd(home);
  
 %% Sub-sampling and organizing our training data to two classes for training
-% YtrainSub = struct([]);
-% R_m     = struct([]);
-% mu_m    = struct([]);
-% pickDs  = [1,2;3,4];
-% 
-% for m = 1:size(pickDs,1)
-%     DD =[];
-%     for c = pickDs(m,:)
-%         if(c>0)
-%             if(c~=5)
-%                 pick = randsample(size(Ytrain(c).D,2),floor(1/4*size(Ytrain(c).D,2)));
-%             else
-%                 pick =1:size(Ytrain(c).D,2);
-%             end
-%         D = Ytrain(c).D;
-%         D = D(:,pick);
-%         DD = [DD,D];
-%         end
-%     end
-%     R_m(m).R = inv(cov(DD')^(1/2));
-%     mu_m(m).mu= mean(DD,2);
-%     YtrainSub(m).D= DD;
-% 
-% end
-% 
-% cd(dirm);
-% save('R_m.mat','R_m');
-% save('mu_m.mat','mu_m');
-% save('YtrainSub.mat','YtrainSub');
+YtrainSub = struct([]);
+R_m     = struct([]);
+mu_m    = struct([]);
+ pickDs  = [1;2;3;4];
+
+for m = 1:size(pickDs,1)
+    DD =[];
+    for c = pickDs(m,:)
+        if(c>0)
+            if(c~=5)
+                pick = randsample(size(Ytrain(c).D,2),floor(1/9*size(Ytrain(c).D,2)));
+            else
+                pick =1:size(Ytrain(c).D,2);
+            end
+        D = Ytrain(c).D;
+        D = D(:,pick);
+        DD = [DD,D];
+        end
+    end
+    R_m(m).R = inv(cov(DD')^(1/2));
+    mu_m(m).mu= mean(DD,2);
+    YtrainSub(m).D= DD;
+
+end
+
+cd(dirm);
+save('R_m.mat','R_m');
+save('mu_m.mat','mu_m');
+save('YtrainSub.mat','YtrainSub');
 
 cd(dirm);
 load('YtrainSub.mat');
 cd(home);
+
+%% RESIZE SIGNAL to only match on good frequencies (1-31kHz)
+
+low_f = 10; % ...no chirp during [0-1kHz)
+high_f = 310; % Using up to 30 kHz (beyond this is mostly 0 so nuisancce params for LS)
+Y = Y(low_f:high_f,:);
+
+%Doing same to our training data
+for m = 1:size(pickDs,1)
+    D = YtrainSub(m).D;
+    D = D(low_f:high_f,:);
+    YtrainSub(m).D = D;
+end
+%% Removing Rocks
+Y = Y(:,t_Y~=5);
+t_Y=t_Y(t_Y~=5);
+%%
+[N, K] = size(Y); % Signal length is N, # test samples is K
+
+% NOT Using Prewhitening
+cd(dirm);
+load('R_m.mat','R_m');
+load('mu_m.mat','mu_m');
+cd(home);
+for m = 1:size(pickDs,1)
+    R_m(m).R=eye(N);
+    mu11 = mu_m(m).mu;
+    mu11 = mu11(low_f:high_f);
+    mu_m(m).mu= (0)*mu11;
+end
 
 %% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
 
@@ -162,7 +192,7 @@ D_KSVD = struct([]);
 DD   =[];% Used in collecting random samples from each class to start LP-KSVD dictionary
 Data =[];% Used in collecting training samples from each class for LP-KSVD
 
-ms   =[150,150]%[150,150,150,150,15]; % number of atoms to train for each class
+ms   =[450,450,450,450]%[150,150,150,150,15]; % number of atoms to train for each class
 % Creating SVD and KSVD dictionaries and accumulating KSVD atoms for 
 % LP-KSVD joint solution
 
@@ -191,7 +221,7 @@ for m = 1:size(pickDs,1) % for each row in pickDs (which groups objects into m c
     
     % SVD Training
     [U,S,V]     = svd(D,'econ');
-    D_SVD(m).D  = U(:,1:301);%R_m(m).R*(U(:,1:ms(m))-mu_m(m).mu*ones(1,ms(m)));
+    D_SVD(m).D  = U(:,1:N);%R_m(m).R*(U(:,1:ms(m))-mu_m(m).mu*ones(1,ms(m)));
 end
 
 % % % LP-KSVD Training on block matrix of Training samples (i.e. 'Data')
@@ -215,46 +245,13 @@ cd(dirm);
 load('D_SVD.mat'); %D_SVD=D_SVD.D_SVD;
 load('D_KSVD.mat'); %D_KSVD=D_KSVD.D_KSVD;
 %load('D_LP.mat'); %D_LP=D_LP.D_LP;
-
-load('R_m.mat','R_m');
-load('mu_m.mat','mu_m');
 cd(home);
 
-%% removing rocks and resizing to only match on good frequencies (1-31kHz)
-
-Y = Y(:,t_Y~=5);
-t_Y=t_Y(t_Y~=5);
-
-low_f = 20;
-Y = Y(low_f:end,:);
-
-for m = 1:size(pickDs,1)
-    USVD  = D_SVD(m).D;
-    UKSVD = D_KSVD(m).D;
-    %ULP   = D_LP(m).D;
-    
-    USVD  = USVD(low_f:end,:);
-    UKSVD = UKSVD(low_f:end,:);
-    %ULP   = ULP(20:end,:);
-    
-    D_SVD(m).D  = USVD;
-    D_KSVD(m).D = UKSVD;
-    %D_LP(m).D   = ULP;
-end
-
-[N, K] = size(Y);
-
-
-%% NOT Using Prewhitening
-for m = 1:size(pickDs,1)
-    R_m(m).R=eye(N);
-    mu_m(m).mu= (0)*mu_m(m).mu(low_f:end);
-end
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [120 120]
-mKSVD   =   [120 120]
+mSVD    =   [18 23]
+mKSVD   =   [450 450]
 %mLP     =   [350 350 300 350 15]
 
 % To account for discrepancy in lower frequencies of model (not currently
@@ -277,7 +274,7 @@ end
 %% Running the WMSC
 est  = 'MSD'
 sigA = 1 % Number of Aspects used per decision
-tauK = 5;
+tauK = 3
 %tauLP =1;
 
 d_YSVD = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
@@ -288,13 +285,13 @@ d_YKSVD = OMPWMSC(Y,D_KSVD,mu_m,R_m,est,sigA,tauK);%WMSC(Y,D_KSVD,mu_m,R_m,est,s
 figure;
 plot(d_YSVD);
 title('SVD');
-legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4');%legend('J_1','J_2','J_3','J_4','J_C');%
+legend('J_1','J_2','J_3','J_4');%legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4','J_C');%
 axis([0,size(Y,2),min(min(d_YSVD)),max(max(d_YSVD))]);
 
 figure;
 plot(d_YKSVD);
 title('KSVD');
-legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4');%legend('J_1','J_2','J_3','J_4','J_C');%
+legend('J_1','J_2','J_3','J_4');%legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4','J_C');%
 axis([0,size(Y,2),min(min(d_YKSVD)),max(max(d_YKSVD))]);
 
 % figure;
@@ -331,8 +328,8 @@ m_YKSVD = zeros(K,1);
 
 
 % Determine Minimal Discriminant Value to make decision and record decision
-T = [1];%[1,2];%[1,2];
-NT = [2];%[3,4];%[3,4,5];
+T = [1,2];%[1];%[1,2];
+NT = [3,4];%[2];%[3,4,5];
 
 % Finding minimal value from UXO and non UXO families of classes
 for k = 1:K

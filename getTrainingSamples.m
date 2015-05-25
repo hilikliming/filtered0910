@@ -21,6 +21,7 @@ sigN    = 310;
             pings = ob.pings';
             cd(home);
             %DD = [DD,formatACLsas(AC,301)]; % This script outputs AC's w/ N=301
+            aper = size(pings,1); %% TEMPORARILY, NOT DECIMATING IN ASPECT
             DD = [DD, extractAC(pings,eps,sigN,upperf, f_s,aper)];
             i = i +1;
         end
