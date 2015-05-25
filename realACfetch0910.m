@@ -5,7 +5,7 @@ Y   = [];
 t_Y = [];
 upperF  = 31e3; % Chosen based on SERDP MR-1665-FR Final Report
 f_s     = 100e3;%
-
+sig_N   = 310;  % (0-31 kHz)
 eps      = 1; %Experimentally determined threholding value for grabbing important aspects
 Dclutter = [];
 
@@ -18,7 +18,7 @@ for tag = realTarg
         if(strfind(char(x(run)),'_norm')) % if it's well conditioned type
             ob=open(char(x(run))); % char() just converts the cell to string
             cd(home);
-            AC = extractAC(ob.new_data,eps,301,upperF,f_s,185);
+            AC = extractAC(ob.new_data,eps,sig_N,upperF,f_s,185);
             if(strfind(char(x(run)),'ROCK'))
                 Dclutter = [Dclutter,AC];
             else

@@ -14,34 +14,34 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-% !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
-% hard-coded, change them to your local directories!
-cd(above);
-dirFRM  = 'DBFRM';
-mkdir(dirFRM);
-cd(dirFRM);dirFRM = cd;
-% Parameters for generateDatabaseLsas indicates environment conditions,
-% ranges, and target rotations to be modeled
-ranges = 10;%9.5:0.5:10.5;
-%water and sediment sound speeds
-c_w = [1464,1530];
-c_s = [1694,1694];
-% rotations to model
-rots = 0:20:360;
-% environment parameters to model, water, sediment speed, interface elevation
-envs      = zeros(length(c_w),3);
-envs(:,1) = c_w;
-envs(:,2) = c_s;
-envs(:,3) = 3.8*ones(length(c_w),1);
-% which of the 7 .ffn's to model
-objs    = [4,10,3,1]; 
-f_s = 100e3;
-chirp   = [1 31 f_s]; % start and end freq of chirp defines center and BW, last number is f_s
-runlen  = [21,769]; %length meters, stops
-cd(home);
-dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
-cd(dirm);
-save('dirMapDBFRM.mat','dirMapDBFRM');
+% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% % hard-coded, change them to your local directories!
+% cd(above);
+% dirFRM  = 'DBFRM';
+% mkdir(dirFRM);
+% cd(dirFRM);dirFRM = cd;
+% % Parameters for generateDatabaseLsas indicates environment conditions,
+% % ranges, and target rotations to be modeled
+% ranges = 10;%9.5:0.5:10.5;
+% %water and sediment sound speeds
+% c_w = [1464,1530];
+% c_s = [1694,1694];
+% % rotations to model
+% rots = 0:20:360;
+% % environment parameters to model, water, sediment speed, interface elevation
+% envs      = zeros(length(c_w),3);
+% envs(:,1) = c_w;
+% envs(:,2) = c_s;
+% envs(:,3) = 3.8*ones(length(c_w),1);
+% % which of the 7 .ffn's to model
+% objs    = [4,10,3,1]; 
+% f_s = 100e3;
+% chirp   = [1 31 f_s]; % start and end freq of chirp defines center and BW, last number is f_s
+% runlen  = [21,769]; %length meters, stops
+% cd(home);
+% dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
+% cd(dirm);
+% save('dirMapDBFRM.mat','dirMapDBFRM');
 
 cd(dirm);
 load('dirMapDBFRM.mat');
@@ -69,16 +69,16 @@ cd(home);
 
 %% Opening and Partitioning Rock Data
 
-% Shuffling Clutter Aspects
-Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
-
-% Splitting Clutter samples
-DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
-DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
-
-cd(dirm);
-save('DcTrain.mat','DcTrain');
-save('DcTest.mat','DcTest');
+% % Shuffling Clutter Aspects
+% Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
+% 
+% % Splitting Clutter samples
+% DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
+% DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
+% 
+% cd(dirm);
+% save('DcTrain.mat','DcTrain');
+% save('DcTest.mat','DcTest');
 
 cd(dirm);
 load('DcTrain.mat');
@@ -220,10 +220,28 @@ load('R_m.mat','R_m');
 load('mu_m.mat','mu_m');
 cd(home);
 
-%% removing rocks
+%% removing rocks and resizing to only match on good frequencies (1-31kHz)
 
 Y = Y(:,t_Y~=5);
 t_Y=t_Y(t_Y~=5);
+
+low_f = 10; % no chirp during [0-1kHz)
+high_f = 310; % Using up to 31 kHz
+Y = Y(low_f:high_f,:);
+
+for m = 1:size(pickDs,1)
+    USVD  = D_SVD(m).D;
+    UKSVD = D_KSVD(m).D;
+    %ULP   = D_LP(m).D;
+    
+    USVD  = USVD(low_f:high_f,:);
+    UKSVD = UKSVD(low_f:high_f,:);
+    %ULP   = ULP(low_f:high_f,:);
+    
+    D_SVD(m).D  = USVD;
+    D_KSVD(m).D = UKSVD;
+    %D_LP(m).D   = ULP;
+end
 
 [N, K] = size(Y);
 
@@ -231,13 +249,15 @@ t_Y=t_Y(t_Y~=5);
 %% NOT Using Prewhitening
 for m = 1:size(pickDs,1)
     R_m(m).R=eye(N);
-    mu_m(m).mu= (0)*mu_m(m).mu;
+    mu11 = mu_m(m).mu;
+    mu11 = mu11(low_f:high_f);
+    mu_m(m).mu= (0)*mu11;
 end
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [120 150]
-mKSVD   =   [120 150]
+mSVD    =   [120 120]
+mKSVD   =   [120 120]
 %mLP     =   [350 350 300 350 15]
 
 % To account for discrepancy in lower frequencies of model (not currently
