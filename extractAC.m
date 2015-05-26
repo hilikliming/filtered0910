@@ -1,4 +1,4 @@
-function [ usableAsps ] = extractAC( filtered_run,eps,sigN,upperf,f_s,aper )
+function [ usableAsps ] = extractAC( filtered_run,eps,sigN,upperf,f_s,stopbins )
 %% Input
 % dir - directory to find Target Data
 % filtered_run - matrix containing filtered run from Pond or TREX to be
@@ -20,12 +20,12 @@ binsize = f_s/size(AC,1);
 AC      = AC(1:ceil(upperf/binsize),:);
 
 % Setting up smaller data structures for decimated form
-aAC = zeros(size(AC,1),aper);
+aAC = zeros(size(AC,1),stopbins);
 % Decimate along aspect if aperture is smaller than number of samples we
 % have...
-if(aper<size(AC,2))
+if(stopbins<size(AC,2))
     for i = 1:size(AC,1)
-    aAC(i,:) = resample(double(AC(i,:)),aper,size(AC,2));
+    aAC(i,:) = resample(double(AC(i,:)),stopbins,size(AC,2));
     end
 else
     aAC = AC;
@@ -41,5 +41,5 @@ for i = 1:size(aAC,2)
 rAC(:,i) = abs(resample(aAC(:,i),sigN,size(aAC,1)))';
 end
 
-usableAsps = 20*log10(abs(normc(rAC)));
+usableAsps = normc(rAC);%20*log10(abs(normc(rAC)));
 end

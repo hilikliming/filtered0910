@@ -14,8 +14,8 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-% !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
-% hard-coded, change them to your local directories!
+% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% % hard-coded, change them to your local directories!
 % cd(above);
 % dirFRM  = 'DBFRM';
 % mkdir(dirFRM);
@@ -37,7 +37,7 @@ cd(home);
 % objs    = [4,10,3,1]; 
 % f_s = 100e3;
 % chirp   = [1 31 f_s]; % start and end freq of chirp defines center and BW, last number is f_s
-% runlen  = [21,750]; %length meters, stops
+% runlen  = [21,800]; %length meters, stops
 % cd(home);
 % dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
 % cd(dirm);
@@ -48,18 +48,18 @@ load('dirMapDBFRM.mat');
 cd(home);
 
 %% Forming OBSERVATION (Testing) Matrix of all usable parts of the Filtered Runs
-
-realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
-    'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
-[Y, t_Y, Dclutter] = realACfetch0910(realTarg); % !!!This script has the
-% 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
-% to your Target Data dir!!!
-
-%Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
-cd(dirm);
-save('Y.mat','Y');
-save('t_Y.mat','t_Y');
-save('Dclutter.mat','Dclutter');
+% stops = 800;
+% realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
+%     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
+% [Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops); % !!!This script has the
+% % 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
+% % to your Target Data dir!!!
+% 
+% %Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
+% cd(dirm);
+% save('Y.mat','Y');
+% save('t_Y.mat','t_Y');
+% save('Dclutter.mat','Dclutter');
 
 cd(dirm);
 load('Y.mat');
@@ -69,16 +69,16 @@ cd(home);
 
 %% Opening and Partitioning Rock Data
 
-% Shuffling Clutter Aspects
-Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
-
-% Splitting Clutter samples
-DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
-DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
-
-cd(dirm);
-save('DcTrain.mat','DcTrain');
-save('DcTest.mat','DcTest');
+% % Shuffling Clutter Aspects
+% Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
+% 
+% % Splitting Clutter samples
+% DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
+% DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
+% 
+% cd(dirm);
+% save('DcTrain.mat','DcTrain');
+% save('DcTest.mat','DcTest');
 
 cd(dirm);
 load('DcTrain.mat');
@@ -90,11 +90,11 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 
 
 %% Extracting and Sampling Training Templates
-Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
-Ytrain(5).D  = DcTrain;
-
-cd(dirm);
-save('Ytrain.mat','Ytrain');
+% Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
+% Ytrain(5).D  = DcTrain;
+% 
+% cd(dirm);
+% save('Ytrain.mat','Ytrain');
 
 cd(dirm);
 load('Ytrain.mat');
@@ -104,7 +104,7 @@ cd(home);
 YtrainSub = struct([]);
 R_m     = struct([]);
 mu_m    = struct([]);
-  pickDs  = [1;2;3;4];
+  pickDs  = [1,2;3,4];
 
 for m = 1:size(pickDs,1)
     DD =[];
@@ -167,7 +167,7 @@ end
 
 %% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
 
-param.numIteration          = 15; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
+param.numIteration          = 10; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
 param.preserveDCAtom        = 0;
 param.InitializationMethod  = 'DataElements';
 param.displayProgress       = 1;
@@ -250,8 +250,8 @@ cd(home);
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [45 45 85 85]
-mKSVD   =   [size(D_KSVD(1).D,2),size(D_KSVD(2).D,2),size(D_KSVD(3).D,2),size(D_KSVD(4).D,2)]%[340 340 340 340]%
+mSVD    =   [145 145 265 265]
+mKSVD   =   [size(D_KSVD(1).D,2),size(D_KSVD(2).D,2)]%,size(D_KSVD(3).D,2),size(D_KSVD(4).D,2)]%[340 340 340 340]%
 %mLP     =   [350 350 300 350 15]
 
 % To account for discrepancy in lower frequencies of model (not currently
@@ -273,7 +273,7 @@ end
 
 %% Running the WMSC
 est  = 'MSD'
-sigA = 1 % Number of Aspects used per decision
+sigA = 3 % Number of Aspects used per decision
 tauK = 2
 %tauLP =1;
 
