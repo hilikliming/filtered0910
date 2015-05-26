@@ -8,7 +8,7 @@ f_s     = 100e3;%
 sig_N   = 310;  % (0-31 kHz)
 eps      = 30; %Experimentally determined threholding value for grabbing important aspects
 Dclutter = [];
-
+aper = 750;
 for tag = realTarg
     cd(['C:\Users\halljj2\Desktop\WMSC-CODE\UW Pond\TARGET_DATA\',char(tag),'\PROUD_10m']);
     here = cd; % Where the object run .mat files are located
@@ -18,7 +18,7 @@ for tag = realTarg
         if(strfind(char(x(run)),'_norm')) % if it's well conditioned type
             ob=open(char(x(run))); % char() just converts the cell to string
             cd(home);
-            aper= size(ob.new_data,1);%TEMPORARILY USING ALL PING RESOLUTION
+            %aper= size(ob.new_data,1);%TEMPORARILY USING ALL PING RESOLUTION
             AC = extractAC(ob.new_data,eps,sig_N,upperF,f_s,aper);
             if(strfind(char(x(run)),'ROCK'))
                 Dclutter = [Dclutter,AC];

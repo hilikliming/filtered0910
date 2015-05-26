@@ -41,5 +41,5 @@ for i = 1:size(aAC,2)
 rAC(:,i) = abs(resample(aAC(:,i),sigN,size(aAC,1)))';
 end
 
-usableAsps = normc(rAC);
+usableAsps = 20*log10(abs(normc(rAC)));
 end
