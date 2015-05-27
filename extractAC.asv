@@ -12,7 +12,7 @@ function [ usableAsps ] = extractAC( filtered_run,eps,sigN,upperf,f_s,stopbins )
 run = double(filtered_run);
 len = size(run,2);
 
-ctr = findArcCtr(run,1e-4*max(max(abs(run).^2)));
+ctr = findArcCtr(run,1/10*max(max(abs(run).^2)));
 
 %% Begin Unpacking 
 AC  = abs(fft(run,[],2))';
@@ -34,10 +34,14 @@ else
 end
 
 
-wid = 30;
-if(eps>2)
+wid = 10;
+
+if(strcmp(eps,'ctr'))
+    ctr =floor(ctr*stopbins/size(AC,2));
     aAC = aAC(:,ctr-wid:ctr+wid-1);
 else
+    if(strcmp(eps,'pwr'))
+        aAC = aAC(:,sum(abs(
     % Select enhanced aspects in the in center (the 'norm' ones all have this)
     aAC = aAC(:,sum(abs(aAC),1)>eps);
 end
@@ -53,7 +57,8 @@ usableAsps = normc(rAC);%20*log10(abs(normc(rAC)));
 end
 
 function [ctrStop]=findArcCtr(run,thresh)
-    ctr = size(run,2);
+    ctrStop = size(run,1)/2;
+    ctr = size(run,2)-1;
     for stop = 1:size(run,1)
         firstReturn = find(abs(run(stop,:)).^2>thresh,1,'first');
         if(~isempty(firstReturn))

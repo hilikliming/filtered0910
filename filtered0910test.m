@@ -14,8 +14,8 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
-% % hard-coded, change them to your local directories!
+% !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% hard-coded, change them to your local directories!
 cd(above);
 dirFRM  = 'DBFRM';
 mkdir(dirFRM);
@@ -94,7 +94,7 @@ Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
 Ytrain(5).D  = DcTrain;
 
 cd(dirm);
-save('Ytrain.mat','Ytrain');
+save('Ytrain.mat','Ytrain'); 
 
 cd(dirm);
 load('Ytrain.mat');
@@ -104,14 +104,14 @@ cd(home);
 YtrainSub = struct([]);
 R_m     = struct([]);
 mu_m    = struct([]);
-pickDs  = [1,2;3,4];
+ pickDs  = [1,2;3,4];
 
 for m = 1:size(pickDs,1)
     DD =[];
     for c = pickDs(m,:)
         if(c>0)
             if(c~=5)
-                pick = randsample(size(Ytrain(c).D,2),floor(1/9*size(Ytrain(c).D,2)));
+                pick = randsample(size(Ytrain(c).D,2),floor(1/7*size(Ytrain(c).D,2)));
             else
                 pick =1:size(Ytrain(c).D,2);
             end
@@ -136,7 +136,6 @@ load('YtrainSub.mat');
 cd(home);
 
 %% RESIZE SIGNAL to only match on good frequencies (1-31kHz)
-
 low_f  = 10; % ...no chirp during [0-1kHz)
 high_f = 305; % Using up to 30 kHz (beyond this is mostly 0 so nuissance params for LS)
 Y      = Y(low_f:high_f,:);
@@ -147,6 +146,7 @@ for m = 1:size(pickDs,1)
     D = D(low_f:high_f,:);
     YtrainSub(m).D = D;
 end
+
 %% Removing Rocks
  Y = Y(:,t_Y~=5);
  t_Y=t_Y(t_Y~=5);
@@ -167,7 +167,7 @@ end
 
 %% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
 
-param.numIteration          = 15; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
+param.numIteration          = 10; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
 param.preserveDCAtom        = 0;
 param.InitializationMethod  = 'DataElements';
 param.displayProgress       = 1;
@@ -192,7 +192,7 @@ D_KSVD = struct([]);
 DD   =[];% Used in collecting random samples from each class to start LP-KSVD dictionary
 Data =[];% Used in collecting training samples from each class for LP-KSVD
 
-ms   =[400,400,400,400]%[150,150,150,150,15]; % number of atoms to train for each class
+ms   =[400,400]%[150,150,150,150,15]; % number of atoms to train for each class
 % Creating SVD and KSVD dictionaries and accumulating KSVD atoms for 
 % LP-KSVD joint solution
 
@@ -239,7 +239,7 @@ end
 cd(dirm);
 save('D_SVD.mat','D_SVD');
 save('D_KSVD.mat','D_KSVD');
-% % %save('D_LP.mat','D_LP');
+% % % %save('D_LP.mat','D_LP');
 
 cd(dirm);
 load('D_SVD.mat'); %D_SVD=D_SVD.D_SVD;
@@ -250,7 +250,7 @@ cd(home);
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [90 145]
+mSVD    =   [19 22]
 mKSVD   =   [size(D_KSVD(1).D,2),size(D_KSVD(2).D,2)]%,size(D_KSVD(3).D,2),size(D_KSVD(4).D,2)]%[340 340 340 340]%
 %mLP     =   [350 350 300 350 15]
 
@@ -274,7 +274,7 @@ end
 %% Running the WMSC
 est  = 'MSD'
 sigA = 1 % Number of Aspects used per decision
-tauK = 1
+tauK = 2
 %tauLP =1;
 
 d_YSVD  = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);

@@ -4,9 +4,9 @@ targetID = 1;
 Y   = []; 
 t_Y = [];
 upperF  = 31e3; % Chosen based on SERDP MR-1665-FR Final Report
-f_s     = 100e3;%
+f_s     = 100e3;% determined experimentally...
 sig_N   = 310;  % (0-31 kHz)
-eps      = 55; %Experimentally determined threholding value for grabbing important aspects
+eps      = 'pwr'; %Experimentally determined threholding value for grabbing important aspects
 Dclutter = [];
 for tag = realTarg
     cd(['C:\Users\halljj2\Desktop\WMSC-CODE\UW Pond\TARGET_DATA\',char(tag),'\PROUD_10m']);
