@@ -36,7 +36,6 @@ end
 
 wid = 30;
 if(eps>2)
-    ctr =floor(ctr*stopbins/size(AC,2));
     aAC = aAC(:,ctr-wid:ctr+wid-1);
 else
     % Select enhanced aspects in the in center (the 'norm' ones all have this)

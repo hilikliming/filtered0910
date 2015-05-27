@@ -14,8 +14,8 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
-% % hard-coded, change them to your local directories!
+% !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% hard-coded, change them to your local directories!
 % cd(above);
 % dirFRM  = 'DBFRM';
 % mkdir(dirFRM);
@@ -37,7 +37,7 @@ cd(home);
 % objs    = [4,10,3,1]; 
 % f_s = 100e3;
 % chirp   = [1 31 f_s]; % start and end freq of chirp defines center and BW, last number is f_s
-% runlen  = [21,800]; %length meters, stops
+% runlen  = [20,800]; %length meters, stops
 % cd(home);
 % dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
 % cd(dirm);
@@ -101,35 +101,35 @@ load('Ytrain.mat');
 cd(home);
  
 %% Sub-sampling and organizing our training data to two classes for training
-YtrainSub = struct([]);
-R_m     = struct([]);
-mu_m    = struct([]);
-  pickDs  = [1,2;3,4];
-
-for m = 1:size(pickDs,1)
-    DD =[];
-    for c = pickDs(m,:)
-        if(c>0)
-            if(c~=5)
-                pick = randsample(size(Ytrain(c).D,2),floor(1/9*size(Ytrain(c).D,2)));
-            else
-                pick =1:size(Ytrain(c).D,2);
-            end
-        D = Ytrain(c).D;
-        D = D(:,pick);
-        DD = [DD,D];
-        end
-    end
-    R_m(m).R = inv(cov(DD')^(1/2));
-    mu_m(m).mu= mean(DD,2);
-    YtrainSub(m).D= DD;
-
-end
-
-cd(dirm);
-save('R_m.mat','R_m');
-save('mu_m.mat','mu_m');
-save('YtrainSub.mat','YtrainSub');
+% YtrainSub = struct([]);
+% R_m     = struct([]);
+% mu_m    = struct([]);
+pickDs  = [1,2;3,4];
+% 
+% for m = 1:size(pickDs,1)
+%     DD =[];
+%     for c = pickDs(m,:)
+%         if(c>0)
+%             if(c~=5)
+%                 pick = randsample(size(Ytrain(c).D,2),floor(1/9*size(Ytrain(c).D,2)));
+%             else
+%                 pick =1:size(Ytrain(c).D,2);
+%             end
+%         D = Ytrain(c).D;
+%         D = D(:,pick);
+%         DD = [DD,D];
+%         end
+%     end
+%     R_m(m).R = inv(cov(DD')^(1/2));
+%     mu_m(m).mu= mean(DD,2);
+%     YtrainSub(m).D= DD;
+% 
+% end
+% 
+% cd(dirm);
+% save('R_m.mat','R_m');
+% save('mu_m.mat','mu_m');
+% save('YtrainSub.mat','YtrainSub');
 
 cd(dirm);
 load('YtrainSub.mat');
@@ -137,11 +137,11 @@ cd(home);
 
 %% RESIZE SIGNAL to only match on good frequencies (1-31kHz)
 
-low_f = 10; % ...no chirp during [0-1kHz)
-high_f = 302; % Using up to 30 kHz (beyond this is mostly 0 so nuisancce params for LS)
-Y = Y(low_f:high_f,:);
+low_f  = 10; % ...no chirp during [0-1kHz)
+high_f = 305; % Using up to 30 kHz (beyond this is mostly 0 so nuissance params for LS)
+Y      = Y(low_f:high_f,:);
 
-%Doing same to our training data
+% Doing same to our training data
 for m = 1:size(pickDs,1)
     D = YtrainSub(m).D;
     D = D(low_f:high_f,:);
@@ -167,7 +167,7 @@ end
 
 %% Training signal subspaces via SVD/K-SVD/LP-KSVD with same run parameters
 
-param.numIteration          = 10; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
+param.numIteration          = 15; % number of iterations to perform (paper uses 80 for 1500 20-D vectors)
 param.preserveDCAtom        = 0;
 param.InitializationMethod  = 'DataElements';
 param.displayProgress       = 1;
@@ -250,7 +250,7 @@ cd(home);
 %mu_m(5).mu=mu_m(6).mu;
 %% Trimming Down Various Dictionaries (Fine Tuning)
 
-mSVD    =   [145 145 265 265]
+mSVD    =   [90 145]
 mKSVD   =   [size(D_KSVD(1).D,2),size(D_KSVD(2).D,2)]%,size(D_KSVD(3).D,2),size(D_KSVD(4).D,2)]%[340 340 340 340]%
 %mLP     =   [350 350 300 350 15]
 
@@ -274,7 +274,7 @@ end
 %% Running the WMSC
 est  = 'MSD'
 sigA = 3 % Number of Aspects used per decision
-tauK = 2
+tauK = 5
 %tauLP =1;
 
 d_YSVD  = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
@@ -285,13 +285,13 @@ d_YKSVD = OMPWMSC(Y,D_KSVD,mu_m,R_m,est,sigA,tauK);%WMSC(Y,D_KSVD,mu_m,R_m,est,s
 figure;
 plot(d_YSVD);
 title('SVD');
-legend('J_1','J_2','J_3','J_4');%legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4','J_C');%
+legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4');%legend('J_1','J_2','J_3','J_4','J_C');%
 axis([0,size(Y,2),min(min(d_YSVD)),max(max(d_YSVD))]);
 
 figure;
 plot(d_YKSVD);
 title('KSVD');
-legend('J_1','J_2','J_3','J_4');%legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4','J_C');%
+legend('J_T','J_{NT}');%legend('J_1','J_2','J_3','J_4');%legend('J_1','J_2','J_3','J_4','J_C');%
 axis([0,size(Y,2),min(min(d_YKSVD)),max(max(d_YKSVD))]);
 
 % figure;
@@ -328,8 +328,8 @@ m_YKSVD = zeros(K,1);
 
 
 % Determine Minimal Discriminant Value to make decision and record decision
-T = [1,2];%[1];%[1,2];
-NT = [3,4];%[2];%[3,4,5];
+T = [1];%[1,2];%[1,2];
+NT = [2];%[3,4];%[3,4,5];
 
 % Finding minimal value from UXO and non UXO families of classes
 for k = 1:K
