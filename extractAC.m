@@ -12,7 +12,7 @@ function [ usableAsps ] = extractAC( filtered_run,eps,sigN,upperf,f_s,stopbins )
 run = double(filtered_run);
 len = size(run,2);
 
-ctr = findArcCtr(run,1e-4*max(max(abs(run).^2)));
+ctr = findArcCtr(run,3e-4*max(max(abs(run).^2)));
 
 %% Begin Unpacking 
 AC  = abs(fft(run,[],2))';
@@ -34,7 +34,8 @@ else
 end
 
 
-wid = 30;
+wid = 60;
+
 if(eps>2)
     ctr =floor(ctr*stopbins/size(AC,2));
     aAC = aAC(:,ctr-wid:ctr+wid-1);

@@ -14,52 +14,52 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-% !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
-% hard-coded, change them to your local directories!
-% cd(above);
-% dirFRM  = 'DBFRM';
-% mkdir(dirFRM);
-% cd(dirFRM);dirFRM = cd;
-% % Parameters for generateDatabaseLsas indicates environment conditions,
-% % ranges, and target rotations to be modeled
-% ranges = 10;%9.5:0.5:10.5;
-% %water and sediment sound speeds
-% c_w = [1464,1530];
-% c_s = [1694,1694];
-% % rotations to model
-% rots = 0:20:360;
-% % environment parameters to model, water, sediment speed, interface elevation
-% envs      = zeros(length(c_w),3);
-% envs(:,1) = c_w;
-% envs(:,2) = c_s;
-% envs(:,3) = 3.8*ones(length(c_w),1);
-% % which of the 7 .ffn's to model
-% objs    = [4,10,3,1]; 
-% f_s = 100e3;
-% chirp   = [1 31 f_s]; % start and end freq of chirp defines center and BW, last number is f_s
-% runlen  = [20,800]; %length meters, stops
-% cd(home);
-% dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
-% cd(dirm);
-% save('dirMapDBFRM.mat','dirMapDBFRM');
+% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% % hard-coded, change them to your local directories!
+cd(above);
+dirFRM  = 'DBFRM';
+mkdir(dirFRM);
+cd(dirFRM);dirFRM = cd;
+% Parameters for generateDatabaseLsas indicates environment conditions,
+% ranges, and target rotations to be modeled
+ranges = 10;%9.5:0.5:10.5;
+%water and sediment sound speeds
+c_w = [1464,1530];
+c_s = [1694,1694];
+% rotations to model
+rots = 0:20:360;
+% environment parameters to model, water, sediment speed, interface elevation
+envs      = zeros(length(c_w),3);
+envs(:,1) = c_w;
+envs(:,2) = c_s;
+envs(:,3) = 3.8*ones(length(c_w),1);
+% which of the 7 .ffn's to model
+objs    = [4,10,3,1]; 
+f_s = 100e3;
+chirp   = [1 31 f_s]; % start and end freq of chirp defines center and BW, last number is f_s
+runlen  = [20,800]; %length meters, stops
+cd(home);
+dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
+cd(dirm);
+save('dirMapDBFRM.mat','dirMapDBFRM');
 
 cd(dirm);
 load('dirMapDBFRM.mat');
 cd(home);
 
 %% Forming OBSERVATION (Testing) Matrix of all usable parts of the Filtered Runs
-% stops = 800;
-% realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
-%     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
-% [Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops); % !!!This script has the
-% % 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
-% % to your Target Data dir!!!
-% 
-% %Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
-% cd(dirm);
-% save('Y.mat','Y');
-% save('t_Y.mat','t_Y');
-% save('Dclutter.mat','Dclutter');
+stops = 800;
+realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
+    'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
+[Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops); % !!!This script has the
+% 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
+% to your Target Data dir!!!
+
+%Y = Y*(eye(K)-ones(K,1)*ones(K,1)'/K);
+cd(dirm);
+save('Y.mat','Y');
+save('t_Y.mat','t_Y');
+save('Dclutter.mat','Dclutter');
 
 cd(dirm);
 load('Y.mat');
@@ -69,16 +69,16 @@ cd(home);
 
 %% Opening and Partitioning Rock Data
 
-% % Shuffling Clutter Aspects
-% Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
-% 
-% % Splitting Clutter samples
-% DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
-% DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
-% 
-% cd(dirm);
-% save('DcTrain.mat','DcTrain');
-% save('DcTest.mat','DcTest');
+% Shuffling Clutter Aspects
+Dclutter = Dclutter(:,randperm(size(Dclutter,2)));
+
+% Splitting Clutter samples
+DcTrain = Dclutter(:,1:size(Dclutter,2)/2);
+DcTest = Dclutter(:,size(Dclutter,2)/2+1:end);
+
+cd(dirm);
+save('DcTrain.mat','DcTrain');
+save('DcTest.mat','DcTest');
 
 cd(dirm);
 load('DcTrain.mat');
@@ -90,46 +90,46 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 
 
 %% Extracting and Sampling Training Templates
-% Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
-% Ytrain(5).D  = DcTrain;
-% 
-% cd(dirm);
-% save('Ytrain.mat','Ytrain');
+Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
+Ytrain(5).D  = DcTrain;
+
+cd(dirm);
+save('Ytrain.mat','Ytrain');
 
 cd(dirm);
 load('Ytrain.mat');
 cd(home);
  
 %% Sub-sampling and organizing our training data to two classes for training
-% YtrainSub = struct([]);
-% R_m     = struct([]);
-% mu_m    = struct([]);
+YtrainSub = struct([]);
+R_m     = struct([]);
+mu_m    = struct([]);
 pickDs  = [1,2;3,4];
-% 
-% for m = 1:size(pickDs,1)
-%     DD =[];
-%     for c = pickDs(m,:)
-%         if(c>0)
-%             if(c~=5)
-%                 pick = randsample(size(Ytrain(c).D,2),floor(1/9*size(Ytrain(c).D,2)));
-%             else
-%                 pick =1:size(Ytrain(c).D,2);
-%             end
-%         D = Ytrain(c).D;
-%         D = D(:,pick);
-%         DD = [DD,D];
-%         end
-%     end
-%     R_m(m).R = inv(cov(DD')^(1/2));
-%     mu_m(m).mu= mean(DD,2);
-%     YtrainSub(m).D= DD;
-% 
-% end
-% 
-% cd(dirm);
-% save('R_m.mat','R_m');
-% save('mu_m.mat','mu_m');
-% save('YtrainSub.mat','YtrainSub');
+
+for m = 1:size(pickDs,1)
+    DD =[];
+    for c = pickDs(m,:)
+        if(c>0)
+            if(c~=5)
+                pick = randsample(size(Ytrain(c).D,2),floor(1/9*size(Ytrain(c).D,2)));
+            else
+                pick =1:size(Ytrain(c).D,2);
+            end
+        D = Ytrain(c).D;
+        D = D(:,pick);
+        DD = [DD,D];
+        end
+    end
+    R_m(m).R = inv(cov(DD')^(1/2));
+    mu_m(m).mu= mean(DD,2);
+    YtrainSub(m).D= DD;
+
+end
+
+cd(dirm);
+save('R_m.mat','R_m');
+save('mu_m.mat','mu_m');
+save('YtrainSub.mat','YtrainSub');
 
 cd(dirm);
 load('YtrainSub.mat');
@@ -148,8 +148,8 @@ for m = 1:size(pickDs,1)
     YtrainSub(m).D = D;
 end
 %% Removing Rocks
-Y = Y(:,t_Y~=5);
-t_Y=t_Y(t_Y~=5);
+ Y = Y(:,t_Y~=5);
+ t_Y=t_Y(t_Y~=5);
 %%
 [N, K] = size(Y); % Signal length is N, # test samples is K
 
@@ -273,8 +273,8 @@ end
 
 %% Running the WMSC
 est  = 'MSD'
-sigA = 3 % Number of Aspects used per decision
-tauK = 5
+sigA = 1 % Number of Aspects used per decision
+tauK = 1
 %tauLP =1;
 
 d_YSVD  = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
