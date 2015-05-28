@@ -25,6 +25,7 @@ AC      = AC(1:ceil(upperf/binsize),:);
 aAC = zeros(size(AC,1),stopbins);
 % Decimate along aspect if aperture is smaller than number of samples we
 % have...
+AC = AC(:,sum(AC,1)>1);
 if(stopbins<size(AC,2))
     for i = 1:size(AC,1)
     aAC(i,:) = resample(double(AC(i,:)),stopbins,size(AC,2));

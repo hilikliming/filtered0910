@@ -23,7 +23,9 @@ sigN    = 310;
             cd(home);
             xmit = ob.signal;
             xmit = [xmit(:,2)' zeros(1,size(pings,2)-length(xmit))]';
-            pings = PulseCompress(pings,xmit,ob.sample_rate,0.5e3);
+            
+            %pings = PulseCompress(pings,xmit,ob.sample_rate,0.5e3);
+            
             %DD = [DD,formatACLsas(AC,301)]; % This script outputs AC's w/ N=301
             aper = size(pings,1); %% TEMPORARILY, NOT DECIMATING IN ASPECT
             DD = [DD, extractAC(pings,eps,sigN,upperf, f_s,aper)];

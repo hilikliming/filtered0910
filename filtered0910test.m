@@ -50,10 +50,11 @@ load('dirMapDBFRM.mat');
 cd(home);
 
 %% Forming OBSERVATION (Testing) Matrix of all usable parts of the Filtered Runs
+
 stops = 800;
 realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
-[Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops,3); % !!!This script has the
+[Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops,55); % !!!This script has the
 % 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
 % to your Target Data dir!!!
 
@@ -92,6 +93,7 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 
 
 %% Extracting and Sampling Training Templates
+
 Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
 Ytrain(5).D  = DcTrain;
 
@@ -103,6 +105,7 @@ load('Ytrain.mat');
 cd(home);
  
 %% Sub-sampling and organizing our training data to two classes for training
+
 YtrainSub = struct([]);
 R_m     = struct([]);
 mu_m    = struct([]);
@@ -138,7 +141,8 @@ load('YtrainSub.mat');
 cd(home);
 
 %% RESIZE SIGNAL to only match on good frequencies (1-31kHz)
-low_f  = 10; % ...no chirp during [0-1kHz)
+
+low_f  = 20; % ...no chirp during [0-1kHz)
 high_f = 305; % Using up to 30 kHz (beyond this is mostly 0 so nuissance params for LS)
 Y      = Y(low_f:high_f,:);
 
@@ -149,10 +153,10 @@ for m = 1:size(pickDs,1)
     YtrainSub(m).D = D;
 end
 
-%% Removing Rocks
+% Removing Rocks
 Y = Y(:,t_Y~=5);
 t_Y=t_Y(t_Y~=5);
-%%
+% % %
 [N, K] = size(Y); % Signal length is N, # test samples is K
 
 % NOT Using Prewhitening
