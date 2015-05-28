@@ -5,7 +5,7 @@ i = 1;
 Ytrain = struct([]);
 upperf  = 31e3; % Chosen based on SERDP MR-1665-FR Final Report
 f_s     = 100e3;%
-eps     = 1; %Experimentally determined threholding value for grabbing important aspects
+eps     = 2; %Experimentally determined threholding value for grabbing important aspects
 %aper    = 185; % half degree resolution
 sigN    = 310;
 
@@ -19,7 +19,10 @@ sigN    = 310;
             ob = open(char(x));
             %AC = ob.acp'; % Opening AC in directory
             pings = ob.pings';
+            
             cd(home);
+            xmit = [ob.signal 
+            pings = PulseCompress(pings,xmit,ob.sample_rate,ob.dfreq);
             %DD = [DD,formatACLsas(AC,301)]; % This script outputs AC's w/ N=301
             aper = size(pings,1); %% TEMPORARILY, NOT DECIMATING IN ASPECT
             DD = [DD, extractAC(pings,eps,sigN,upperf, f_s,aper)];

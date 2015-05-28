@@ -1,4 +1,4 @@
-function [ Y, t_Y, Dclutter ] = realACfetch0910( realTarg,stops )
+function [ Y, t_Y, Dclutter ] = realACfetch0910( realTarg,stops,eps )
 home     = cd;
 targetID = 1;
 Y   = []; 
@@ -6,7 +6,7 @@ t_Y = [];
 upperF  = 31e3; % Chosen based on SERDP MR-1665-FR Final Report
 f_s     = 100e3;% determined experimentally...
 sig_N   = 310;  % (0-31 kHz)
-eps      = 'pwr'; %Experimentally determined threholding value for grabbing important aspects
+%eps      = 55; %Experimentally determined threholding value for grabbing important aspects
 Dclutter = [];
 for tag = realTarg
     cd(['C:\Users\halljj2\Desktop\WMSC-CODE\UW Pond\TARGET_DATA\',char(tag),'\PROUD_10m']);
@@ -14,11 +14,11 @@ for tag = realTarg
     x = what; x = x.mat;
     % Various rotations of orientation are captured in each run
     for run = 1:length(x)
-        if(strfind(char(x(run)),'_norm')) % if it's well conditioned type
+        if(~isempty(strfind(char(x(run)),'_norm'))) % if it's well conditioned type
             ob=open(char(x(run))); % char() just converts the cell to string
             cd(home);
             %aper= size(ob.new_data,1);%TEMPORARILY USING ALL PING RESOLUTION
-            AC = extractAC(ob.new_data,eps,sig_N,upperF,f_s,stops);
+            AC = extractAC(ob.new_data',eps,sig_N,upperF,f_s,stops);
             if(strfind(char(x(run)),'ROCK'))
                 Dclutter = [Dclutter,AC];
             else

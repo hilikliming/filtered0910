@@ -14,8 +14,9 @@ dirm    =   cd;
 cd(home);
 
 %% Generating FRM database w/ generateDatabaseLsas.m saving dirMap
-% !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
-% hard-coded, change them to your local directories!
+% % !!!NOTE: Lines 57-58 of generateDatabaseLsas.m and 48 of fixInsLsas.m are 
+% % hard-coded, change them to your local directories!
+
 cd(above);
 dirFRM  = 'DBFRM';
 mkdir(dirFRM);
@@ -35,9 +36,10 @@ envs(:,2) = c_s;
 envs(:,3) = 3.8*ones(length(c_w),1);
 % which of the 7 .ffn's to model
 objs    = [4,10,3,1]; 
-f_s = 100e3;
+f_s     = 100e3;
 chirp   = [1 31 f_s]; % start and end freq of chirp defines center and BW, last number is f_s
 runlen  = [20,800]; %length meters, stops
+
 cd(home);
 dirMapDBFRM = generateDatabaseLsas(dirFRM,envs,ranges,rots,objs,chirp,runlen);
 cd(dirm);
@@ -51,7 +53,7 @@ cd(home);
 stops = 800;
 realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
-[Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops); % !!!This script has the
+[Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops,3); % !!!This script has the
 % 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
 % to your Target Data dir!!!
 
@@ -104,16 +106,16 @@ cd(home);
 YtrainSub = struct([]);
 R_m     = struct([]);
 mu_m    = struct([]);
- pickDs  = [1,2;3,4];
+pickDs  = [1,2;3,4];
 
 for m = 1:size(pickDs,1)
     DD =[];
     for c = pickDs(m,:)
         if(c>0)
             if(c~=5)
-                pick = randsample(size(Ytrain(c).D,2),floor(1/7*size(Ytrain(c).D,2)));
+                pick = randsample(size(Ytrain(c).D,2),floor(1/8*size(Ytrain(c).D,2)));
             else
-                pick =1:size(Ytrain(c).D,2);
+                pick =randsample(size(Ytrain(c).D,2),floor(1/10*size(Ytrain(c).D,2)));
             end
         D = Ytrain(c).D;
         D = D(:,pick);
@@ -148,8 +150,8 @@ for m = 1:size(pickDs,1)
 end
 
 %% Removing Rocks
- Y = Y(:,t_Y~=5);
- t_Y=t_Y(t_Y~=5);
+Y = Y(:,t_Y~=5);
+t_Y=t_Y(t_Y~=5);
 %%
 [N, K] = size(Y); % Signal length is N, # test samples is K
 
@@ -223,6 +225,10 @@ for m = 1:size(pickDs,1) % for each row in pickDs (which groups objects into m c
     [U,S,V]     = svd(D,'econ');
     D_SVD(m).D  = U(:,1:N);%R_m(m).R*(U(:,1:ms(m))-mu_m(m).mu*ones(1,ms(m)));
 end
+% % De = Ytrain(5).D;
+% % [U S V]=svd(De(low_f:high_f,:));
+% % D_SVD(2).D = [D_SVD(2).D U(:,1:10)];
+% % D_KSVD(2).D = [D_KSVD(2).D U(:,1:10)];
 
 % % % LP-KSVD Training on block matrix of Training samples (i.e. 'Data')
 % % param.K= size(DD,2);
@@ -274,7 +280,7 @@ end
 %% Running the WMSC
 est  = 'MSD'
 sigA = 1 % Number of Aspects used per decision
-tauK = 2
+tauK = 5
 %tauLP =1;
 
 d_YSVD  = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
@@ -435,10 +441,12 @@ plot([P_faSVD(gamkSVD), P_faKSVD(gamkKSVD)],[P_dSVD(gamkSVD),P_dKSVD(gamkKSVD)],
 axis([0, 1, 0, 1]);
 hold off
 cd(dirm);
-print(hndl,['0910fil',num2str(sigA),'aMSD.png'],'-dpng');
+print(hndl,['0910fil',num2str(sigA),'aMSDhd.png'],'-dpng');
 cd(home);
 
 
+
+%% CREATING CONFUSION MATRICES
 dSVD = zeros(K,1);
 dKSVD = zeros(K,1);
 %dLP = zeros(K,1);

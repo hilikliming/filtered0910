@@ -12,10 +12,10 @@ function [ usableAsps ] = extractAC( filtered_run,eps,sigN,upperf,f_s,stopbins )
 run = double(filtered_run);
 len = size(run,2);
 
-ctr = findArcCtr(run,1/10*max(max(abs(run).^2)));
+ctr = findArcCtr(run,0.03*mean(mean(abs(run).^2)));
 
 %% Begin Unpacking 
-AC  = abs(fft(run,[],2))';
+AC  = abs(fft(run,[],1));
 
 % Windowing Useable spectral power
 binsize = f_s/size(AC,1);
@@ -34,16 +34,16 @@ else
 end
 
 
-wid = 50;
+wid = 25;
 
 if(strcmp(eps,'ctr'))
-    ctr =floor(ctr*stopbins/size(AC,2));
+    ctr = floor(ctr*stopbins/size(AC,2));
     aAC = aAC(:,ctr-wid:ctr+wid-1);
 else
     if(strcmp(eps,'pwr'))
         [~, order] = sort(sum(abs(aAC).^2,1));
         order = fliplr(order);
-        order = order(1:floor(length(order)*0.05));
+        order = order(1:floor(length(order)*0.045));
         aAC = aAC(:,order);
     else
     % Select enhanced aspects in the in center (the 'norm' ones all have this)
@@ -63,14 +63,13 @@ end
 
 function [ctrStop]=findArcCtr(run,thresh)
     ctrStop = size(run,1)/2;
-    ctr = size(run,2)-1;
+    ctrCol = size(run,2)-10;
     for stop = 1:size(run,1)
-        firstReturn = find(abs(run(stop,:)).^2>thresh,1,'first');
-        if(~isempty(firstReturn))
-            if(firstReturn<=ctr)
+        firstReturn = find(abs(run(stop,:)).^2 > thresh,1,'first');
+        if(~isempty(firstReturn)&& firstReturn<=ctrCol)
                ctrStop = stop;
-               ctr = firstReturn;
-            end
+               ctrCol  = firstReturn;
+
         end
     end
 end
