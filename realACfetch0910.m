@@ -17,7 +17,10 @@ for tag = realTarg
         if(~isempty(strfind(char(x(run)),'_norm'))) % if it's well conditioned type
             ob=open(char(x(run))); % char() just converts the cell to string
             cd(home);
-            AC = extractAC(ob.new_data',eps,sig_N,upperF,f_s,stops);
+            load('APL_VLA_1_30kHz.mat');
+            xmit = decimate(data_V,10);
+            pings = ob.new_data';%PulseCompress(ob.new_data',xmit,f_s,0);%
+            AC = extractAC(pings,eps,sig_N,upperF,f_s,stops);
             if(strfind(char(x(run)),'ROCK'))
                 Dclutter = [Dclutter,AC];
             else

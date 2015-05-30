@@ -16,5 +16,5 @@ omega = (2*pi)*(f0/fs);
 
 y = zeros(size(x));
 for i = 1:size(x,2)
-    y(:,i) = exp(-1i*omega*n).*ifft(fft(hilbert(x(:,i))).*conj(Xmit));
+    y(:,i) =ifft(fft(hilbert(x(:,i))).*conj(Xmit));% exp(-1i*omega*n).*
 end

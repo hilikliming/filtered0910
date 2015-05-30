@@ -25,10 +25,10 @@ cd(dirFRM);dirFRM = cd;
 % ranges, and target rotations to be modeled
 ranges = 10;%9.5:0.5:10.5;
 %water and sediment sound speeds
-c_w = [1464,1530];
-c_s = [1694,1694];
+c_w = [1448,1456,1464,1530];
+c_s = [1694,1694,1694,1694];
 % rotations to model
-rots = 0:20:360;
+rots = [0:20:80,270:20:350];
 % environment parameters to model, water, sediment speed, interface elevation
 envs      = zeros(length(c_w),3);
 envs(:,1) = c_w;
@@ -54,7 +54,7 @@ cd(home);
 stops = 800;
 realTarg = {'AL_UXO_SHELL','STEEL_UXO_SHELL',... % 1,2
     'AL_PIPE','SOLID_AL_CYLINDER','ROCK1','ROCK2'}; % 3,4,5,6
-[Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops,55); % !!!This script has the
+[Y, t_Y, Dclutter] = realACfetch0910(realTarg,stops,30); % !!!This script has the
 % 'UW Pond' Directory hardcoded in, change it (line 13 of realACfetch0910)
 % to your Target Data dir!!!
 
@@ -94,7 +94,7 @@ t_Y = [t_Y;(max(t_Y)+1)*ones(size(DcTest,2),1)];
 
 %% Extracting and Sampling Training Templates
 
-Ytrain       = getTrainingSamples(dirMapDBFRM(:,:,:,:));
+Ytrain       = getTrainingSamples(dirMapDBFRM(3:4,:,:,:));
 Ytrain(5).D  = DcTrain;
 
 cd(dirm);
@@ -109,7 +109,7 @@ cd(home);
 YtrainSub = struct([]);
 R_m     = struct([]);
 mu_m    = struct([]);
-pickDs  = [1,2;3,4];
+ pickDs  = [1,2;3,4];
 
 for m = 1:size(pickDs,1)
     DD =[];
@@ -118,7 +118,7 @@ for m = 1:size(pickDs,1)
             if(c~=5)
                 pick = randsample(size(Ytrain(c).D,2),floor(1/8*size(Ytrain(c).D,2)));
             else
-                pick =randsample(size(Ytrain(c).D,2),floor(1/10*size(Ytrain(c).D,2)));
+                pick = randsample(size(Ytrain(c).D,2),floor(1/10*size(Ytrain(c).D,2)));
             end
         D = Ytrain(c).D;
         D = D(:,pick);
@@ -142,7 +142,7 @@ cd(home);
 
 %% RESIZE SIGNAL to only match on good frequencies (1-31kHz)
 
-low_f  = 20; % ...no chirp during [0-1kHz)
+low_f  = 11; % ...no chirp during [0-1kHz)
 high_f = 305; % Using up to 30 kHz (beyond this is mostly 0 so nuissance params for LS)
 Y      = Y(low_f:high_f,:);
 
@@ -187,7 +187,7 @@ coding.method    = 'MP';
 coding.errorFlag = 1;            
 coding.errorGoal = 1e-4; % allowed representation error for each signal (only if errorFlag = 1)
 coding.eta       = 1e-6; % Used in LP-KSVD
-coding.tau       = 10;   % Used in OMP during Sparse coding phase of KSVD
+coding.tau       = 8;   % Used in OMP during Sparse coding phase of KSVD
 coding.L         = coding.tau;
 
 D_SVD  = struct([]);
@@ -198,7 +198,7 @@ D_KSVD = struct([]);
 DD   =[];% Used in collecting random samples from each class to start LP-KSVD dictionary
 Data =[];% Used in collecting training samples from each class for LP-KSVD
 
-ms   =[400,400]%[150,150,150,150,15]; % number of atoms to train for each class
+ms   =[600,600]%[150,150,150,150,15]; % number of atoms to train for each class
 % Creating SVD and KSVD dictionaries and accumulating KSVD atoms for 
 % LP-KSVD joint solution
 
@@ -249,7 +249,7 @@ end
 cd(dirm);
 save('D_SVD.mat','D_SVD');
 save('D_KSVD.mat','D_KSVD');
-% % % %save('D_LP.mat','D_LP');
+% % %save('D_LP.mat','D_LP');
 
 cd(dirm);
 load('D_SVD.mat'); %D_SVD=D_SVD.D_SVD;
@@ -284,7 +284,7 @@ end
 %% Running the WMSC
 est  = 'MSD'
 sigA = 1 % Number of Aspects used per decision
-tauK = 5
+tauK = 2
 %tauLP =1;
 
 d_YSVD  = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
