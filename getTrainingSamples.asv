@@ -22,7 +22,7 @@ sigN    = 310;
             cd(home);
             xmit = ob.signal;
             %xmit = xmit(:,2);%[xmit(:,2)' zeros(1,size(pings,1)-length(xmit))]';%.*xmit(:,1);
-            %pings = PulseCompress(pings,xmit,ob.sample_rate,200);
+            pings = PulseCompress(pings,xmit,ob.sample_rate,1000);
 %             for asp = 1:size(pings,2)
 %                 strip = conv(fliplr(xmit)',pings(:,asp));
 %                 pings(:,asp) = strip(1:size(pings,1));%PulseCompress(pings,xmit,ob.sample_rate,0.5e3);

@@ -77,7 +77,7 @@ for m = 1:M
         end
         % Form observation from relevant vectors and by removing mean under
         % hypothesis m
-        zk = sqrt(W)*R_m(m).R*(Y(:,patch)-mu_m(m).mu*ones(1,length(patch)));
+        zk = R_m(m).R*sqrt(W)*(Y(:,patch)-mu_m(m).mu*ones(1,length(patch)));
         ak=A*X(:,patch);
         J_km(k,m) = norm(zk-ak,'fro')^2/norm(zk,'fro')^2;%trace((zk*zk'-ek*ek'))/trace(zk'*zk);%./trace(Z'*Z);
     end

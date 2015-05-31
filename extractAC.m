@@ -44,7 +44,7 @@ else
     if(strcmp(eps,'pwr'))
         [~, order] = sort(sum(abs(aAC).^2,1));
         order = fliplr(order);
-        order = order(1:floor(length(order)*0.25));
+        order = order(1:floor(length(order)*0.065));
         aAC = aAC(:,order);
     else
     % Select enhanced aspects in the in center (the 'norm' ones all have this)
