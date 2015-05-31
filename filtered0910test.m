@@ -108,7 +108,7 @@ cd(home);
 
 YtrainSub = struct([]);
 
- pickDs  = [1;2;3;4];
+pickDs  = [1;2;3;4];
 
 for m = 1:size(pickDs,1)
     DD =[];
@@ -251,29 +251,31 @@ end
 %% Saving the Learned Signal Subspaces
 
 cd(dirm);
-save('D_SVD.mat','D_SVD');
-save('D_KSVD.mat','D_KSVD');
-save('D_KL.mat','D_KL');
 save('R_m.mat','R_m');
 save('mu_m.mat','mu_m');
+save('D_SVD.mat','D_SVD');
+save('D_KSVD.mat','D_KSVD');
+% % save('D_KL.mat','D_KL');
 % % %save('D_LP.mat','D_LP');
 
 cd(dirm);
-load('D_SVD.mat'); %D_SVD=D_SVD.D_SVD;
-load('D_KSVD.mat'); %D_KSVD=D_KSVD.D_KSVD;
-%load('D_LP.mat'); %D_LP=D_LP.D_LP;
-
 load('R_m.mat','R_m');
 load('mu_m.mat','mu_m');
+load('D_SVD.mat'); 
+load('D_KSVD.mat'); 
+load('D_KL.mat'); 
+%load('D_LP.mat'); 
+
+
 cd(home);
 % NOT Using Prewhitening
 
-% for m = 1:size(pickDs,1)
-%     R_m(m).R=eye(N);
-%     mu11 = mu_m(m).mu;
-%     mu11 = mu11(low_f:high_f);
-%     mu_m(m).mu= (0)*mu11;
-% end
+for m = 1:size(pickDs,1)
+    R_m(m).R=eye(N);
+    mu11 = mu_m(m).mu;
+    mu11 = mu11(low_f:high_f);
+    mu_m(m).mu= (0)*mu11;
+end
 
 
 %% Trimming Down Various Dictionaries (Fine Tuning)
@@ -305,8 +307,8 @@ sigA = 1 % Number of Aspects used per decision
 tauK = 3
 %tauLP =1;
 
-d_YSVD  = WMSC(Y,D_KL,mu_m,R_m,est,sigA);
-%d_YKSVD = OMPWMSC(Y,D_KSVD,mu_m,R_m,est,sigA,tauK);%WMSC(Y,D_KSVD,mu_m,R_m,est,sigA);%
+d_YSVD  = WMSC(Y,D_SVD,mu_m,R_m,est,sigA);
+d_YKSVD = OMPWMSC(Y,D_KSVD,mu_m,R_m,est,sigA,tauK);%WMSC(Y,D_KSVD,mu_m,R_m,est,sigA);%
 %d_YLP   = LocalWMSC(Y,D_LP,mu_m,R_m,est,sigA,tauLP,1e-6);%WMSC(Y,D_LP,mu_m,R_m,est,sigA);
 
 %% Displaying Result/Method Comparison
