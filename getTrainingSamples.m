@@ -5,7 +5,7 @@ i = 1;
 Ytrain = struct([]);
 upperf  = 31e3; % Chosen based on SERDP MR-1665-FR Final Report
 f_s     = 100e3;%
-eps     = 2; %Experimentally determined threholding value for grabbing important aspects
+eps     = 1e-2; %Experimentally determined threholding value for grabbing important aspects
 sigN    = 310;
 
     for obj = 1:size(trainList,2)
@@ -28,7 +28,7 @@ sigN    = 310;
 %                 pings(:,asp) = strip(1:size(pings,1));%PulseCompress(pings,xmit,ob.sample_rate,0.5e3);
 %             end
             %DD = [DD,formatACLsas(AC,301)]; % This script outputs AC's w/ N=301
-            DD = [DD, extractAC(pings,eps,sigN,upperf,f_s,stops)];
+            DD = [DD, extractAC(pings,'pwr',sigN,upperf,f_s,stops)];
             i = i +1;
         end
       end

@@ -44,16 +44,16 @@ else
     if(strcmp(eps,'pwr'))% Selecting top aspects by ordering power
         [pwrss, order] = sort(sum(abs(aAC).^2,1));
         order = fliplr(order);
-        order = order(1:floor(length(order)*0.750));
+        order = order(1:floor(length(order)*0.10));
         aAC = aAC(:,order);
     else
-        % Selecting top aspects by relative power
-        aAC = aAC(:,sum(abs(aAC).^2,1)>eps);%*max(sum(abs(aAC).^2,1)));
+        % Selecting top aspects by ordering power
+        aAC = aAC(:,sum(abs(aAC).^2,1)>eps*mean(sum(abs(aAC).^2,1)));
     end
 end
 % Simulating Sparser stopping by taking every tenth aspect with a wobble of
 % +-5 stops
-aAC = reSort(aAC,12,4);
+aAC = reSort(aAC,13,4);
 % For each aspect, decimate frequency bins to desired signal length
 rAC = zeros(sigN,size(aAC,2));
 
